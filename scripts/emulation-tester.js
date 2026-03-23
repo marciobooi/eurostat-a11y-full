@@ -115,11 +115,39 @@ async function emulateAdaptiveModes(page, allViolations, options = {}) {
     });
   }
 
-  // 4. Target Size (WCAG 2.2 - 2.5.8)
+  // 4. Reflow (SC 1.4.10 - 400% zoom / 320px)
+  if (options.reflow) {
+    console.log('\n📌 STEP 13b: Testing Reflow (SC 1.4.10) at 320px...');
+    const originalSize = page.viewportSize();
+    await page.setViewportSize({ width: 320, height: 800 });
+    await page.waitForTimeout(1000);
+
+    const hasHorizontalScroll = await page.evaluate(() => {
+      const scrollWidth = document.documentElement.scrollWidth;
+      const clientWidth = document.documentElement.clientWidth;
+      return scrollWidth > clientWidth;
+    });
+
+    if (hasHorizontalScroll) {
+       allViolations.push({
+         id: 'reflow-horizontal-scroll',
+         impact: 'serious',
+         description: 'Horizontal scrolling detected at 320px width (Reflow 1.4.10).',
+         help: 'Ensure content reflows vertically without requiring horizontal scroll at 320px.',
+         step: 'Reflow (1.4.10)',
+         nodes: [{ html: '<html>', failureSummary: 'Horizontal scroll detected.' }]
+       });
+    } else {
+       console.log('      ✅ No horizontal scroll at 320px.');
+    }
+    await page.setViewportSize(originalSize);
+  }
+
+  // 5. Target Size (WCAG 2.2 - 2.5.8)
   if (targetSize) {
-    console.log('\n📌 STEP 13: Auditing Target Size (WCAG 2.2 - 2.5.8)...');
+    console.log('\n📌 STEP 13c: Auditing Target Size (WCAG 2.2 - 2.5.8)...');
     const targetResults = await new AxeBuilder({ page })
-      .withRules(['target-size']) // specifically enable target-size rule
+      .withRules(['target-size']) 
       .analyze();
     
     targetResults.violations.forEach(v => {
@@ -129,6 +157,41 @@ async function emulateAdaptiveModes(page, allViolations, options = {}) {
     
     if (targetResults.violations.length === 0) {
       console.log('      ✅ All tested targets meet the 24px Minimum.');
+    }
+  }
+
+  // 6. Global Contrast Scan (SC 1.4.3)
+  if (options.contrast) {
+    console.log('\n📌 STEP 13d: Global Contrast Audit (SC 1.4.3)...');
+    const contrastResults = await new AxeBuilder({ page })
+      .withRules(['color-contrast'])
+      .analyze();
+    
+    contrastResults.violations.forEach(v => {
+      v.step = 'Color Contrast';
+      allViolations.push(v);
+    });
+    if (contrastResults.violations.length === 0) console.log('      ✅ Contrast checks passed.');
+  }
+
+  // 7. Status Messages (SC 4.1.3)
+  if (options.statusMessages) {
+    console.log('\n📌 STEP 13e: Auditing Status Messages (aria-live)...');
+    const liveRegions = await page.evaluate(() => {
+      const regions = Array.from(document.querySelectorAll('[aria-live], [role="status"], [role="alert"], [role="log"]'));
+      return regions.map(r => ({
+        tag: r.tagName,
+        id: r.id,
+        role: r.getAttribute('role'),
+        live: r.getAttribute('aria-live'),
+        html: r.outerHTML.substring(0, 100)
+      }));
+    });
+
+    if (liveRegions.length === 0) {
+      console.log('      ⚠️ No aria-live regions found. Verify if background updates are announced.');
+    } else {
+      console.log(`      ✅ Found ${liveRegions.length} live regions.`);
     }
   }
 }

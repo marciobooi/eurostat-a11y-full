@@ -111,13 +111,16 @@ module.exports = async function runAudit({ selectedTests, logger }) {
     }
 
     // 10-13. Adaptive Modes & WCAG 2.2
-    if (run('forcedColors') || run('reducedMotion') || run('textSpacing') || run('targetSize')) {
+    if (run('forcedColors') || run('reducedMotion') || run('textSpacing') || run('targetSize') || run('reflow') || run('contrast') || run('statusMessages')) {
       log('📌 STEP 10-13: Advanced Emulation & WCAG 2.2...');
       await emulateAdaptiveModes(page, allViolations, {
         forcedColors: run('forcedColors'),
         reducedMotion: run('reducedMotion'),
         textSpacing: run('textSpacing'),
-        targetSize: run('targetSize')
+        targetSize: run('targetSize'),
+        reflow: run('reflow'),
+        contrast: run('contrast'),
+        statusMessages: run('statusMessages')
       });
       totalStepsTested++;
     }
