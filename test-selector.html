@@ -212,6 +212,10 @@
           <span>EXECUTE AUDIT</span>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
         </button>
+        <button class="btn btn-secondary" id="viewReportBtn" style="display:none;" onclick="window.open('/reports/relatorio-tutorial-global.html', '_blank')">
+          <span>VIEW REPORT</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+        </button>
       </div>
     </div>
   </div>
@@ -243,6 +247,7 @@
   const grid = document.getElementById('testGrid');
   const consoleEl = document.getElementById('console');
   const runBtn = document.getElementById('runBtn');
+  const viewReportBtn = document.getElementById('viewReportBtn');
   const engineStatus = document.getElementById('engineStatus');
   const progressArea = document.getElementById('progressArea');
   const currentStepEl = document.getElementById('currentStep');
@@ -298,38 +303,66 @@
     render();
   }
 
-  async function executeAudit() {
-    if (selected.size === 0) return alert('Select at least one module');
-    
-    runBtn.disabled = true;
-    engineStatus.innerText = 'RUNNING...';
-    engineStatus.classList.add('pulse');
-    progressArea.style.display = 'block';
-    consoleEl.innerHTML = '';
-    appendLog('🚀 AUDIT: Handshaking with Local Engine...');
+  let eventSource;
 
-    const testList = Array.from(selected).join(',');
+  function connect() {
+    if (eventSource) eventSource.close();
+    eventSource = new EventSource('/logs');
     
-    // Connect to Log Stream
-    const eventSource = new EventSource('/logs');
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
+      
+      // Update UI based on engine state
+      if (data.isRunning) {
+        runBtn.disabled = true;
+        engineStatus.innerText = 'RUNNING...';
+        engineStatus.classList.add('pulse');
+        progressArea.style.display = 'block';
+        if (data.currentStep && data.currentStep !== 'IDLE') {
+          currentStepEl.innerText = data.currentStep.replace('📌 ', '');
+        }
+      } else if (!data.message.includes('Report created')) {
+        engineStatus.innerText = 'IDLE';
+        engineStatus.classList.remove('pulse');
+        runBtn.disabled = false;
+      }
+
       appendLog(data.message);
       
       if (data.message.includes('CONSOLIDATING')) {
         engineStatus.innerText = 'FINISHING...';
       }
+      
       if (data.message.includes('Report created')) {
         engineStatus.innerText = 'COMPLETE ✅';
         engineStatus.classList.remove('pulse');
         runBtn.disabled = false;
-        eventSource.close();
+        viewReportBtn.style.display = 'flex';
       }
     };
 
-    // Trigger Audit
+    eventSource.onerror = () => {
+      engineStatus.innerText = 'OFFLINE';
+      engineStatus.classList.remove('pulse');
+      runBtn.disabled = true;
+    };
+  }
+
+  async function executeAudit() {
+    if (selected.size === 0) return alert('Select at least one module');
+    
+    runBtn.disabled = true;
+    engineStatus.innerText = 'INITIATING...';
+    consoleEl.innerHTML = '';
+    viewReportBtn.style.display = 'none';
+    
+    const testList = Array.from(selected).join(',');
+    
     try {
       const response = await fetch(`/api/start-audit?tests=${testList}`);
+      if (response.status === 409) {
+        return alert('An audit is already running in background.');
+      }
       if (!response.ok) throw new Error('Engine unreachable');
     } catch (err) {
       appendLog(`❌ ERROR: ${err.message}`);
@@ -338,6 +371,7 @@
   }
 
   render();
+  connect();
 </script>
 </body>
 </html>

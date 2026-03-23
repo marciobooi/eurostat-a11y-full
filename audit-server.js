@@ -10,10 +10,19 @@ const runAuditLogic = require('./check-full-a11y-module');
  */
 const PORT = 3000;
 let logStreams = [];
+let isAuditRunning = false;
+let currentProcessMessage = 'IDLE';
+let sessionLogs = [];
 
 // Helper to broadcast logs to the browser dashboard
 function broadcastLog(msg) {
-  const data = JSON.stringify({ message: msg });
+  if (msg.startsWith('📌')) currentProcessMessage = msg;
+  sessionLogs.push(msg);
+  const data = JSON.stringify({ 
+    message: msg, 
+    isRunning: isAuditRunning,
+    currentStep: currentProcessMessage 
+  });
   logStreams.forEach(res => res.write(`data: ${data}\n\n`));
   console.log(msg); // Also log to terminal
 }
@@ -29,6 +38,24 @@ const server = http.createServer((req, res) => {
       'Connection': 'keep-alive'
     });
     logStreams.push(res);
+    
+    res.write(`data: ${JSON.stringify({ 
+      message: `Connected to Conductor Engine Session. Status: ${isAuditRunning ? 'RUNNING' : 'IDLE'}`,
+      isRunning: isAuditRunning,
+      currentStep: currentProcessMessage
+    })}\n\n`);
+
+    // Playback session logs if currently running
+    if (isAuditRunning) {
+      sessionLogs.forEach(msg => {
+        res.write(`data: ${JSON.stringify({ 
+          message: msg, 
+          isRunning: true, 
+          currentStep: currentProcessMessage 
+        })}\n\n`);
+      });
+    }
+
     req.on('close', () => {
       logStreams = logStreams.filter(s => s !== res);
     });
@@ -37,9 +64,18 @@ const server = http.createServer((req, res) => {
 
   // 2. API to Start Audit
   if (url.startsWith('/api/start-audit')) {
+    if (isAuditRunning) {
+      res.writeHead(409, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ error: 'Audit already in progress' }));
+    }
+
     const params = new URL(req.url, `http://localhost:${PORT}`).searchParams;
     const tests = params.get('tests')?.split(',') || [];
     
+    isAuditRunning = true;
+    currentProcessMessage = 'INITIALIZING...';
+    sessionLogs = []; // Clear for new session
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ status: 'started' }));
 
@@ -53,12 +89,35 @@ const server = http.createServer((req, res) => {
         });
       } catch (err) {
         broadcastLog(`❌ CRITICAL ERROR: ${err.message}`);
+      } finally {
+        isAuditRunning = false;
+        currentProcessMessage = 'IDLE';
+        broadcastLog('🏁 SESSION FINISHED');
       }
     })();
     return;
   }
 
-  // 3. Serve Dashboard (test-selector.html)
+  // 3. Serve Audit Reports from a11y-reports/
+  if (url.startsWith('/reports/')) {
+    const reportName = url.replace('/reports/', '');
+    const filePath = path.join(__dirname, 'a11y-reports', reportName);
+    
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404);
+        return res.end('Report Not Found');
+      }
+      // Basic content type detection
+      const ext = path.extname(filePath);
+      const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript' };
+      res.writeHead(200, { 'Content-Type': types[ext] || 'text/plain' });
+      res.end(data);
+    });
+    return;
+  }
+
+  // 4. Serve Dashboard (test-selector.html)
   if (url === '/' || url === '/index.html') {
     const filePath = path.join(__dirname, 'test-selector.html');
     fs.readFile(filePath, 'utf8', (err, data) => {
@@ -72,7 +131,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 4. Fallback: Static file server (for local assets if needed)
+  // 5. Fallback: Static file server (for local assets if needed)
   res.writeHead(404);
   res.end('Not Found');
 });

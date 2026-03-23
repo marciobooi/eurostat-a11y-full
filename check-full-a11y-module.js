@@ -25,17 +25,16 @@ const BASE_URL = 'http://localhost:5503/sankey.html';
  * @param {Object} options { selectedTests: array, logger: function }
  */
 module.exports = async function runAudit({ selectedTests, logger }) {
-  // Capture console.log to stream to dashboard
-  const originalLog = console.log;
-  console.log = (...args) => {
-    const msg = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : arg).join(' ');
-    originalLog(msg);
+  // Helper for logging
+  const log = (msg) => {
+    console.log(msg);
     if (logger) logger(msg);
   };
 
+  let browser;
   try {
-    console.log('🚀 INITIALIZING AUDIT RUNNER...');
-    const browser = await chromium.launch({ headless: false, slowMo: 100 });
+    log('🚀 INITIALIZING AUDIT RUNNER...');
+    browser = await chromium.launch({ headless: false, slowMo: 100 });
     const context = await browser.newContext();
     const page = await context.newPage();
     const allViolations = [];
@@ -44,7 +43,7 @@ module.exports = async function runAudit({ selectedTests, logger }) {
     const run = (id) => selectedTests.includes(id);
 
     // --- Load the target page ---
-    console.log(`🎯 LOADING: ${BASE_URL}`);
+    log(`🎯 LOADING: ${BASE_URL}`);
     await setupHandler(page, BASE_URL);
 
     // 1. Tutorial
@@ -137,7 +136,7 @@ module.exports = async function runAudit({ selectedTests, logger }) {
     const reportPath = path.join(reportDir, 'relatorio-tutorial-global.html');
     fs.writeFileSync(reportPath, htmlReport, 'utf8');
 
-    log(`✅ SUCCESS! Report created: ${reportPath}`);
+    log(`✅ SUCCESS! Report created: relatorio-tutorial-global.html`);
     log(`🌐 Opening report...`);
 
     // In Server mode, we open the final report in the same browser session or a new tab
@@ -148,9 +147,8 @@ module.exports = async function runAudit({ selectedTests, logger }) {
     await page.waitForTimeout(10000); 
 
   } catch (error) {
-    console.log(`❌ FATAL ERROR: ${error.message}`);
+    log(`❌ FATAL ERROR: ${error.message}`);
   } finally {
-    console.log = originalLog; // Restore original log
-    await browser.close().catch(() => {});
+    if (browser) await browser.close().catch(() => {});
   }
 };

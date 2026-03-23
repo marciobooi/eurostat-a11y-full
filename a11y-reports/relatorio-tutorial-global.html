@@ -156,12 +156,12 @@
   <div class="container">
     <header>
       <h1>A11y Audit Dashboard 🚀</h1>
-      <p class="subtitle">Detailed report grouped by test scenario. Total steps tested: 9</p>
+      <p class="subtitle">Detailed report grouped by test scenario. Total steps tested: 3</p>
       
       <div class="summary-stats">
-        <div class="stat-card critical"><span class="stat-value" style="color: var(--critical)">3</span><div class="stat-label">Critical</div></div>
-        <div class="stat-card serious"><span class="stat-value" style="color: var(--serious)">12</span><div class="stat-label">Serious</div></div>
-        <div class="stat-card moderate"><span class="stat-value" style="color: var(--moderate)">7</span><div class="stat-label">Moderate</div></div>
+        <div class="stat-card critical"><span class="stat-value" style="color: var(--critical)">0</span><div class="stat-label">Critical</div></div>
+        <div class="stat-card serious"><span class="stat-value" style="color: var(--serious)">2</span><div class="stat-label">Serious</div></div>
+        <div class="stat-card moderate"><span class="stat-value" style="color: var(--moderate)">1</span><div class="stat-label">Moderate</div></div>
         <div class="stat-card minor"><span class="stat-value" style="color: var(--minor)">0</span><div class="stat-label">Minor</div></div>
       </div>
     </header>
@@ -263,8 +263,8 @@
             <span class="step-num-badge">Step 3</span>
             <span class="step-title">Timeline Component</span>
             <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge serious" style="background: ; color: ">
-                3 unique issues
+              <span class="badge " style="background: #dcfce7; color: #166534">
+                0 unique issues
               </span>
               <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
@@ -272,121 +272,7 @@
           
           <div class="step-content">
             
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">slider-keyboard-nav-failed</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge critical">critical</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Slider does not respond to ArrowLeft key.</div>
-                  <div class="rule-help">👉 <a href="https://www.w3.org/WAI/ARIA/apg/patterns/slider/" target="_blank">Sliders must support Arrow keys for accessible interaction.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Keydown ArrowLeft did not update aria-valuenow.
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Timeline Slider</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;span tabindex=&quot;0&quot; class=&quot;ui-slider-handle ui-corner-all ui-state-default ui-state-focus&quot; role=&quot;slider&quot; aria-orientation=&quot;horizontal&quot; aria-valuemin=&quot;2010&quot; aria-valuemax=&quot;2024&quot; aria-valuenow=&quot;2024&quot; style=&quot;left: 85.7143%;&quot;&gt;&lt;div id=&quot;sliderTimePeriod&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;2022&lt;/span&gt;&lt;/div&gt;&lt;/span&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;span tabindex=&quot;0&quot; class=&quot;ui-slider-handle ui-corner-all ui-state-default ui-state-focus&quot; role=&quot;slider&quot; aria-orientation=&quot;horizontal&quot; aria-valuemin=&quot;2010&quot; aria-valuemax=&quot;2024&quot; aria-valuenow=&quot;2024&quot; style=&quot;left: 85.7143%;&quot;&gt;&lt;div id=&quot;sliderTimePeriod&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;2022&lt;/span&gt;&lt;/div&gt;&lt;/span&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Keydown ArrowLeft did not update aria-valuenow.</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">aria-input-field-name</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    <span class="badge" style="background: #e2e8f0; color: #475569; padding: 1px 6px;">SC 2a</span><span class="badge" style="background: #e2e8f0; color: #475569; padding: 1px 6px;">SC 412</span>
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Ensure every ARIA input field has an accessible name</div>
-                  <div class="rule-help">👉 <a href="https://dequeuniversity.com/rules/axe/4.11/aria-input-field-name?application=playwright" target="_blank">ARIA input fields must have an accessible name</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Fix any of the following:
-  aria-label attribute does not exist or is empty
-  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty
-  Element has no title attribute
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Timeline</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">.ui-slider-handle</span>
-                        </div>
-                        <div class="code-block">&lt;span tabindex=&quot;0&quot; class=&quot;ui-slider-handle ui-corner-all ui-state-default&quot; role=&quot;slider&quot; aria-orientation=&quot;horizontal&quot; aria-valuemin=&quot;2010&quot; aria-valuemax=&quot;2024&quot; aria-valuenow=&quot;2024&quot; style=&quot;left: 100%;&quot;&gt;&lt;div id=&quot;sliderTimePeriod&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;2024&lt;/span&gt;&lt;/div&gt;&lt;/span&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;span tabindex=&quot;0&quot; class=&quot;ui-slider-handle ui-corner-all ui-state-default&quot; role=&quot;slider&quot; aria-orientation=&quot;horizontal&quot; aria-valuemin=&quot;2010&quot; aria-valuemax=&quot;2024&quot; aria-valuenow=&quot;2024&quot; style=&quot;left: 100%;&quot;&gt;&lt;div id=&quot;sliderTimePeriod&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;2024&lt;/span&gt;&lt;/div&gt;&lt;/span&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Fix any of the following:
-  aria-label attribute does not exist or is empty
-  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty
-  Element has no title attribute</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">slider-no-name</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Slider handle (.ui-slider-handle) missing an accessible name.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Add aria-label to the slider handle.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> 
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Timeline Slider</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;span tabindex=&quot;0&quot; class=&quot;ui-slider-handle ui-corner-all ui-state-default&quot; role=&quot;slider&quot; aria-orientation=&quot;horizontal&quot; aria-valuemin=&quot;2010&quot; aria-valuemax=&quot;2024&quot; aria-valuenow=&quot;2024&quot; style=&quot;left: 100%;&quot;&gt;&lt;div id=&quot;sliderTimePeriod&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;2024&lt;/span&gt;&lt;/div&gt;&lt;/span&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;span tabindex=&quot;0&quot; class=&quot;ui-slider-handle ui-corner-all ui-state-default&quot; role=&quot;slider&quot; aria-orientation=&quot;horizontal&quot; aria-valuemin=&quot;2010&quot; aria-valuemax=&quot;2024&quot; aria-valuenow=&quot;2024&quot; style=&quot;left: 100%;&quot;&gt;&lt;div id=&quot;sliderTimePeriod&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;2024&lt;/span&gt;&lt;/div&gt;&lt;/span&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;"></textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-            
+            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
           </div>
         </div>
       
@@ -449,8 +335,8 @@
             <span class="step-num-badge">Step 6</span>
             <span class="step-title">Main Toolbar</span>
             <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge serious" style="background: ; color: ">
-                5 unique issues
+              <span class="badge " style="background: #dcfce7; color: #166534">
+                0 unique issues
               </span>
               <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
@@ -458,231 +344,7 @@
           
           <div class="step-content">
             
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">aria-required-children</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    <span class="badge" style="background: #e2e8f0; color: #475569; padding: 1px 6px;">SC 2a</span><span class="badge" style="background: #e2e8f0; color: #475569; padding: 1px 6px;">SC 131</span>
-                    <span class="badge critical">critical</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Ensure elements with an ARIA role that require child roles contain them</div>
-                  <div class="rule-help">👉 <a href="https://dequeuniversity.com/rules/axe/4.11/aria-required-children?application=playwright" target="_blank">Certain ARIA roles must contain particular children</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Fix any of the following:
-  Element has children which are not allowed: li[tabindex]
-                        </div>
-                        
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">#sankeyToolbox</span>
-                        </div>
-                        <div class="code-block">&lt;ul id=&quot;sankeyToolbox&quot; role=&quot;menubar&quot; aria-label=&quot;Sankey graph toolbox&quot; class=&quot;navbar-nav ms-auto my-2 my-lg-0 navbar-nav-scroll d-flex align-items-center&quot; style=&quot;--bs-scroll-height: 50vw;&quot;&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;ul id=&quot;sankeyToolbox&quot; role=&quot;menubar&quot; aria-label=&quot;Sankey graph toolbox&quot; class=&quot;navbar-nav ms-auto my-2 my-lg-0 navbar-nav-scroll d-flex align-items-center&quot; style=&quot;--bs-scroll-height: 50vw;&quot;&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Fix any of the following:
-  Element has children which are not allowed: li[tabindex]</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">menubar-invalid-children</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge critical">critical</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Direct children of role=&quot;menubar&quot; must be role=&quot;menuitem&quot; or role=&quot;none&quot;. Found &lt;li&gt; with native focus or role.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Give &lt;li&gt; tags in menubars role=&quot;none&quot; and put role=&quot;menuitem&quot; on inner interactives.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> 
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Toolbox</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;li id=&quot;containerCountry&quot; class=&quot;nav-item px-1&quot;&gt;      
-    &lt;div class=&quot;ecl-form-group&quot;&gt;
-      &lt;div c</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;li id=&quot;containerCountry&quot; class=&quot;nav-item px-1&quot;&gt;      
-    &lt;div class=&quot;ecl-form-group&quot;&gt;
-      &lt;div c</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;"></textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">listitem</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    <span class="badge" style="background: #e2e8f0; color: #475569; padding: 1px 6px;">SC 2a</span><span class="badge" style="background: #e2e8f0; color: #475569; padding: 1px 6px;">SC 131</span>
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Ensure &lt;li&gt; elements are used semantically</div>
-                  <div class="rule-help">👉 <a href="https://dequeuniversity.com/rules/axe/4.11/listitem?application=playwright" target="_blank">&lt;li&gt; elements must be contained in a &lt;ul&gt; or &lt;ol&gt;</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Fix any of the following:
-  List item parent element has a role that is not role=&quot;list&quot;
-                        </div>
-                        
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">.nav-item.px-1:nth-child(1)</span>
-                        </div>
-                        <div class="code-block">&lt;li id=&quot;containerCountry&quot; class=&quot;nav-item px-1&quot;&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;li id=&quot;containerCountry&quot; class=&quot;nav-item px-1&quot;&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Fix any of the following:
-  List item parent element has a role that is not role=&quot;list&quot;</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">toolbox-btn-no-label</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Toolbox button  is missing an aria-label.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Add descriptive labels to icon-only buttons.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> No aria-label detected.
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Toolbox</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;button class=&quot;ecl-button ecl-button--ghost&quot;&gt;Clear all&lt;/button&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;button class=&quot;ecl-button ecl-button--ghost&quot;&gt;Clear all&lt;/button&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">No aria-label detected.</textarea>
-                        </div>
-                      </div>
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> No aria-label detected.
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Toolbox</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;button class=&quot;ecl-button ecl-button--primary&quot;&gt;Submit&lt;/button&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;button class=&quot;ecl-button ecl-button--primary&quot;&gt;Submit&lt;/button&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">No aria-label detected.</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">toolbox-btn-wrong-role</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge moderate">moderate</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Toolbox item  should have role=&quot;menuitem&quot;.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Interactive menubar children should use role=&quot;menuitem&quot;.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Missing role=&quot;menuitem&quot;.
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Toolbox</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;button class=&quot;ecl-button ecl-button--ghost&quot;&gt;Clear all&lt;/button&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;button class=&quot;ecl-button ecl-button--ghost&quot;&gt;Clear all&lt;/button&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Missing role=&quot;menuitem&quot;.</textarea>
-                        </div>
-                      </div>
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Missing role=&quot;menuitem&quot;.
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Toolbox</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;button class=&quot;ecl-button ecl-button--primary&quot;&gt;Submit&lt;/button&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;button class=&quot;ecl-button ecl-button--primary&quot;&gt;Submit&lt;/button&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Missing role=&quot;menuitem&quot;.</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-            
+            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
           </div>
         </div>
       
@@ -691,8 +353,8 @@
             <span class="step-num-badge">Step 7</span>
             <span class="step-title">Sankey Nodes &amp; Modals</span>
             <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge serious" style="background: ; color: ">
-                5 unique issues
+              <span class="badge " style="background: #dcfce7; color: #166534">
+                0 unique issues
               </span>
               <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
@@ -700,153 +362,7 @@
           
           <div class="step-content">
             
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">modal-missing-aria-modal</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Modal missing aria-modal=&quot;true&quot;. Screen readers may leak focus to background.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank"></a></div>
-                  
-                  <div class="occ-grid">
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">modal-invalid-role</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Modal element should have role=&quot;dialog&quot; or &quot;alertdialog&quot;.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank"></a></div>
-                  
-                  <div class="occ-grid">
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">undefined-text-in-dom</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Text or attribute contains &quot;undefined&quot;, &quot;null&quot; or &quot;NaN&quot;. Missing translation or data binding!</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Check i18n keys and data-bound values.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> [text node] Found &quot;European Union - year undefined  2024&quot;
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Node Modal</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;span class=&quot;sankey-category geo text-wrap&quot; style=&quot;font-size: 1rem;&quot;&gt;European Union - year undefined  2024&lt;/span&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;span class=&quot;sankey-category geo text-wrap&quot; style=&quot;font-size: 1rem;&quot;&gt;European Union - year undefined  2024&lt;/span&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">[text node] Found &quot;European Union - year undefined  2024&quot;</textarea>
-                        </div>
-                      </div>
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> [attribute [aria-label]] Found &quot;undefined&quot;
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Node Modal</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;select class=&quot;ecl-select&quot; id=&quot;selectCountries&quot; name=&quot;country&quot; required=&quot;&quot; multiple=&quot;&quot; autocomplete=&quot;country-name&quot; aria-label=&quot;undefined&quot; data-ecl-auto-init=&quot;Select&quot; data-ecl-select-multiple=&quot;true&quot; data-ecl-select-default=&quot;Choose options&quot; data-ecl-select-search=&quot;Enter filter keyword&quot; data-ecl-select</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;select class=&quot;ecl-select&quot; id=&quot;selectCountries&quot; name=&quot;country&quot; required=&quot;&quot; multiple=&quot;&quot; autocomplete=&quot;country-name&quot; aria-label=&quot;undefined&quot; data-ecl-auto-init=&quot;Select&quot; data-ecl-select-multiple=&quot;true&quot; data-ecl-select-default=&quot;Choose options&quot; data-ecl-select-search=&quot;Enter filter keyword&quot; data-ecl-select</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">[attribute [aria-label]] Found &quot;undefined&quot;</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">landmark-unique</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge moderate">moderate</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Ensure landmarks are unique</div>
-                  <div class="rule-help">👉 <a href="https://dequeuniversity.com/rules/axe/4.11/landmark-unique?application=playwright" target="_blank">Landmarks should have a unique role or role/label/title (i.e. accessible name) combination</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Fix any of the following:
-  The landmark must have a unique aria-label, aria-labelledby, or title to make landmarks distinguishable
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Node Modal</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">.card-header &gt; nav</span>
-                        </div>
-                        <div class="code-block">&lt;nav&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;nav&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Fix any of the following:
-  The landmark must have a unique aria-label, aria-labelledby, or title to make landmarks distinguishable</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">modal-focus-return-failed</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge moderate">moderate</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Focus did not return to the trigger element after closing the modal.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank"></a></div>
-                  
-                  <div class="occ-grid">
-                    
-                  </div>
-                </div>
-              </div>
-            
-            
+            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
           </div>
         </div>
       
@@ -855,8 +371,8 @@
             <span class="step-num-badge">Step 7b</span>
             <span class="step-title">Highcharts Chart</span>
             <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge serious" style="background: ; color: ">
-                1 unique issues
+              <span class="badge " style="background: #dcfce7; color: #166534">
+                0 unique issues
               </span>
               <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
@@ -864,25 +380,7 @@
           
           <div class="step-content">
             
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">chart-missing-summary</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">No text summary or description found for the visualization.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Add highcharts-description for WCAG/EAA compliance.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                  </div>
-                </div>
-              </div>
-            
-            
+            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
           </div>
         </div>
       
@@ -1054,77 +552,13 @@
             <span class="step-title">Global Page Structure</span>
             <div style="display: flex; align-items: center; gap: 1rem;">
               <span class="badge serious" style="background: ; color: ">
-                3 unique issues
+                1 unique issues
               </span>
               <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
             </div>
           </div>
           
           <div class="step-content">
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">page-no-h1</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge moderate">moderate</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">The page must have at least one level-one heading (&lt;h1&gt;).</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Add an &lt;h1&gt; describing the context (e.g., Sankey Diagram Visualizer).</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> No level-one heading was found in the main document or any frames.
-                        </div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: Global Structure</div>
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;html lang=&quot;en&quot; style=&quot;--color-total: #388AE2; --color-mf1: #33A033; --color-mf2: #096698; --color-mf3: #E8AE00; --color-mf4: #AF155C; --color-mf5: #734221; --color-mf6: #9D61FC; --color-recovery: #008D8B;&quot;&gt;&lt;head&gt;
-	&lt;meta charset=&quot;utf-8&quot;&gt;
-	&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
-	&lt;title&gt;Circular economy flow diagrams&lt;/title&gt;
-	&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
-	&lt;meta name=&quot;description&quot; content=&quot;Sankey diagrams of material flows present the flows of ...</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;html lang=&quot;en&quot; style=&quot;--color-total: #388AE2; --color-mf1: #33A033; --color-mf2: #096698; --color-mf3: #E8AE00; --color-mf4: #AF155C; --color-mf5: #734221; --color-mf6: #9D61FC; --color-recovery: #008D8B;&quot;&gt;&lt;head&gt;
-	&lt;meta charset=&quot;utf-8&quot;&gt;
-	&lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
-	&lt;title&gt;Circular economy flow diagrams&lt;/title&gt;
-	&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
-	&lt;meta name=&quot;description&quot; content=&quot;Sankey diagrams of material flows present the flows of ...</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">No level-one heading was found in the main document or any frames.</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">landmark-no-label</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge moderate">moderate</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Multiple landmarks of type &lt;nav&gt; found without unique labels.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Use aria-label or aria-labelledby to distinguish between multiple landmarks of the same type.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                  </div>
-                </div>
-              </div>
             
               <div class="rule-card">
                 <div class="rule-header">
