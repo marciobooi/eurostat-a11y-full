@@ -1,18 +1,62 @@
 {
   "name": "eurostat-a11y-full",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Eurostat accessibility audit suite with web and desktop dashboard modes.",
+  "main": "electron-main.js",
   "scripts": {
+    "start": "node audit-server.js",
+    "desktop": "electron .",
+    "dist:win": "electron-builder --win nsis portable",
+    "dist:win:publish": "electron-builder --win nsis --publish always",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Capgemini",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "@axe-core/playwright": "^4.11.1",
     "axe-html-reporter": "^2.2.11",
+    "electron-updater": "^6.3.9",
     "playwright": "^1.58.2"
+  },
+  "devDependencies": {
+    "electron-builder": "^25.1.8",
+    "electron": "^36.0.0"
+  },
+  "build": {
+    "appId": "com.capgemini.eurostat.a11ysuite",
+    "productName": "Eurostat A11y Suite",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist/**",
+      "!a11y-reports/**"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "build/icon.ico",
+      "publisherName": "Capgemini",
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Eurostat A11y Suite"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "${env.AUTO_UPDATE_URL}"
+      }
+    ],
+    "artifactName": "${productName}-${version}-${arch}.${ext}"
   }
 }

@@ -133,8 +133,10 @@ module.exports = async function runAudit({ selectedTests, logger }) {
     // --- FINAL REPORT CONSOLIDATION ---
     log('\n🛠️ CONSOLIDATING REPORT DATA...');
     const htmlReport = generateModernReport(allViolations, totalStepsTested);
-    const reportDir = path.resolve('a11y-reports');
-    if (!fs.existsSync(reportDir)) fs.mkdirSync(reportDir);
+    const reportDir = process.env.A11Y_REPORT_DIR
+      ? path.resolve(process.env.A11Y_REPORT_DIR)
+      : path.resolve('a11y-reports');
+    if (!fs.existsSync(reportDir)) fs.mkdirSync(reportDir, { recursive: true });
     
     const reportPath = path.join(reportDir, 'relatorio-tutorial-global.html');
     fs.writeFileSync(reportPath, htmlReport, 'utf8');

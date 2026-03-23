@@ -8,11 +8,13 @@ const runAuditLogic = require('./check-full-a11y-module');
  * AESTHETIC AUDIT SERVER (Dashboard Mode)
  * This server allows running audits directly from the browser UI.
  */
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
+const REPORT_DIR = process.env.A11Y_REPORT_DIR || path.join(__dirname, 'a11y-reports');
 let logStreams = [];
 let isAuditRunning = false;
 let currentProcessMessage = 'IDLE';
 let sessionLogs = [];
+let server;
 
 // Helper to broadcast logs to the browser dashboard
 function broadcastLog(msg) {
@@ -27,7 +29,8 @@ function broadcastLog(msg) {
   console.log(msg); // Also log to terminal
 }
 
-const server = http.createServer((req, res) => {
+function createServer() {
+  return http.createServer((req, res) => {
   const url = req.url;
 
   // 1. SSE Stream for logs
@@ -64,7 +67,7 @@ const server = http.createServer((req, res) => {
 
   // 2. API to List Reports
   if (url === '/api/reports') {
-    const reportDir = path.join(__dirname, 'a11y-reports');
+    const reportDir = REPORT_DIR;
     if (!fs.existsSync(reportDir)) {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify([]));
@@ -120,7 +123,7 @@ const server = http.createServer((req, res) => {
   // 3. Serve Audit Reports from a11y-reports/
   if (url.startsWith('/reports/')) {
     const reportName = url.replace('/reports/', '');
-    const filePath = path.join(__dirname, 'a11y-reports', reportName);
+    const filePath = path.join(REPORT_DIR, reportName);
     
     fs.readFile(filePath, (err, data) => {
       if (err) {
@@ -153,10 +156,59 @@ const server = http.createServer((req, res) => {
   // 5. Fallback: Static file server (for local assets if needed)
   res.writeHead(404);
   res.end('Not Found');
-});
+  });
+}
 
-server.listen(PORT, () => {
-  console.log('\n🌟 CONDUCER: Eurostat A11y Suite Dashboard is LIVE!');
-  console.log(`🔗 Access Dashboard: http://localhost:${PORT}`);
-  console.log('---');
-});
+function startServer(port = PORT) {
+  if (server && server.listening) {
+    return Promise.resolve(server);
+  }
+
+  server = createServer();
+
+  return new Promise((resolve, reject) => {
+    const onError = (err) => reject(err);
+    server.once('error', onError);
+    server.listen(port, () => {
+      server.off('error', onError);
+      console.log('\n🌟 CONDUCER: Eurostat A11y Suite Dashboard is LIVE!');
+      console.log(`🔗 Access Dashboard: http://localhost:${port}`);
+      console.log('---');
+      resolve(server);
+    });
+  });
+}
+
+function stopServer() {
+  if (!server || !server.listening) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    logStreams.forEach((res) => {
+      try {
+        res.end();
+      } catch (err) {
+        // Ignore stale stream close errors.
+      }
+    });
+    logStreams = [];
+    server.close((err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+}
+
+if (require.main === module) {
+  startServer().catch((err) => {
+    console.error(`❌ Failed to start dashboard server: ${err.message}`);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  startServer,
+  stopServer,
+  PORT
+};
