@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A11y Audit — Conductor Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.5);
+      --bg: #020617;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(51, 65, 85, 0.8);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-new: #10b981;
+      --accent-wcag: #f59e0b;
+      --console-bg: rgba(15, 23, 42, 0.9);
+    }
+    
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+      color: var(--text);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 2rem;
+      padding: 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      flex: 1;
+    }
+
+    @media (max-width: 1100px) {
+      .main-layout { grid-template-columns: 1fr; }
+    }
+
+    header { margin-bottom: 2rem; }
+    h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+    .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-top: 5px; }
+
+    /* Configuration Panel */
+    .config-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .test-card {
+      background: rgba(15, 23, 42, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .test-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 10px 20px -10px var(--primary-glow); }
+    .test-card.selected { border-color: var(--primary); background: rgba(37, 99, 235, 0.1); }
+    .test-card.selected::after {
+      content: '✓'; position: absolute; top: 12px; right: 12px;
+      background: var(--primary); color: white; width: 22px; height: 22px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;
+    }
+    .test-card.active { border-color: var(--accent-new); box-shadow: 0 0 15px var(--accent-new); }
+
+    .test-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+    .step-num { 
+      background: var(--card-border); color: #fff; 
+      font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; 
+    }
+    .test-card.selected .step-num { background: var(--primary); }
+
+    .test-title { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
+    .test-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
+
+    .badge { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; }
+    .badge-new { background: var(--accent-new); color: #000; }
+    .badge-wcag { background: var(--accent-wcag); color: #000; }
+
+    /* Console Panel */
+    .console-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      height: 100%;
+    }
+
+    .console-box {
+      flex: 1;
+      background: var(--console-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      overflow-y: auto;
+      max-height: 700px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+    }
+    .console-line { margin-bottom: 4px; opacity: 0; animation: fadeInConsole 0.3s forwards; }
+    @keyframes fadeInConsole { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+    .console-line.cmd { color: var(--primary); font-weight: bold; }
+    .console-line.step { color: var(--accent-wcag); font-weight: bold; margin-top: 10px; }
+    .console-line.success { color: var(--accent-new); font-weight: bold; }
+    .console-line.error { color: #ef4444; font-weight: bold; }
+
+    .status-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 1.5rem;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .status-lbl { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+    .status-val { font-size: 1.2rem; font-weight: 800; font-family: 'Outfit'; }
+
+    .actions { display: flex; gap: 1rem; margin-top: 2rem; }
+    .btn {
+      font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700;
+      padding: 1rem 2rem; border-radius: 12px; border: none; cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      flex: 1;
+    }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 14px 0 var(--primary-glow); }
+    .btn-primary:hover { background: #2563eb; transform: translateY(-2px); }
+    .btn-primary:active { transform: translateY(0); }
+    .btn-secondary { background: #334155; color: white; }
+    
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    .pulse { animation: pulseAnim 2s infinite; }
+    @keyframes pulseAnim { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="main-layout">
+  
+  <div class="config-side">
+    <header>
+      <h1>A11y Conductor 🚀</h1>
+      <p class="subtitle">Eurostat Pro Audit Suite — Advanced Conformance Dashboard</p>
+    </header>
+
+    <div class="config-panel">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-family:'Outfit'; margin:0;">Module Selection</h2>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="toggleAll(false)">Clear</button>
+          <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="toggleAll(true)">Select All</button>
+        </div>
+      </div>
+      
+      <div class="test-grid" id="testGrid">
+        <!-- Dashboard Cards -->
+      </div>
+    </div>
+  </div>
+
+  <div class="console-side">
+    <div class="console-panel">
+      <div class="status-bar">
+        <div>
+          <div class="status-lbl">Engine Status</div>
+          <div class="status-val" id="engineStatus">IDLE</div>
+        </div>
+        <div id="progressArea" style="display:none;">
+          <div class="status-lbl">Current Pipeline</div>
+          <div id="currentStep" class="status-val" style="font-size: 1rem; color: var(--accent-new);">---</div>
+        </div>
+      </div>
+
+      <div class="console-box" id="console">
+        <div class="console-line">Ready for instruction. Select modules and click 'Execute'.</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="runBtn" onclick="executeAudit()">
+          <span>EXECUTE AUDIT</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const TESTS = [
+    { id: 'tutorial', num: 1, title: 'Tutorial Flow', desc: 'Step-by-step Aria & Focus Trap analysis.', badge: 'ARIA' },
+    { id: 'navbar', num: 2, title: 'Main Navbar', desc: 'Logo, social links, and sub-nav logic.' },
+    { id: 'languageModal', num: '2b', title: 'Language Selector', desc: 'Modal focus trap & translations.', parent: 'navbar' },
+    { id: 'timeline', num: 3, title: 'Timeline Slider', desc: 'Keyboard navigation & drag-alts.', badge: 'WCAG 2.5.7' },
+    { id: 'floatingControls', num: 4, title: 'Floating UI', desc: 'Zoom/Legend interaction logic.' },
+    { id: 'legend', num: '4b', title: 'Legend Content', desc: 'Dynamic scan of legend categories.', parent: 'floatingControls' },
+    { id: 'select', num: 5, title: 'Geo Select', desc: 'ECL Multi-select and toolbar labels.' },
+    { id: 'selectDropdown', num: '5b', title: 'Select Options', desc: 'Search input & dropdown depth.', parent: 'select' },
+    { id: 'toolbar', num: 6, title: 'Main Toolbar', desc: 'Menubar structure & display toggles.', badge: 'Critical' },
+    { id: 'nodeModal', num: 7, title: 'Detail Modals', desc: 'Sankey dialog patterns and focus.', badge: 'Standard' },
+    { id: 'chart', num: '7b', title: 'Highcharts View', desc: 'SVG tags and Proxy Tree logic.', parent: 'nodeModal', badge: 'EAA' },
+    { id: 'undefinedText', num: 8, title: 'Translation Scan', desc: 'Undefined/Null/NaN monitoring.', badge: 'QA' },
+    { id: 'globalTabbing', num: 9, title: 'Full Keyboard Sweep', desc: 'End-to-end focus sequence scan.' },
+    { id: 'forcedColors', num: 10, title: 'High Contrast Mode', desc: 'OS-level color emulation audit.', badge: 'OS' },
+    { id: 'reducedMotion', num: 11, title: 'Reduced Motion', desc: 'Animation suppression validation.', badge: 'OS' },
+    { id: 'textSpacing', num: 12, title: 'Text Spacing', desc: 'WCAG 1.4.12 overflow testing.', badge: 'WCAG 2.1' },
+    { id: 'targetSize', num: 13, title: 'Target Size', desc: 'WCAG 2.2 24px minimum verify.', badge: 'WCAG 2.2' },
+    { id: 'globalStructure', num: 14, title: 'Page Structure', desc: 'H1 Headings & Landmark regions.', badge: 'Landmark' }
+  ];
+
+  const grid = document.getElementById('testGrid');
+  const consoleEl = document.getElementById('console');
+  const runBtn = document.getElementById('runBtn');
+  const engineStatus = document.getElementById('engineStatus');
+  const progressArea = document.getElementById('progressArea');
+  const currentStepEl = document.getElementById('currentStep');
+  
+  const selected = new Set(TESTS.map(t => t.id));
+
+  function render() {
+    grid.innerHTML = '';
+    TESTS.forEach(t => {
+      const card = document.createElement('div');
+      card.className = `test-card ${selected.has(t.id) ? 'selected' : ''}`;
+      
+      const parentDisabled = t.parent && !selected.has(t.parent);
+      if (parentDisabled) card.classList.add('disabled');
+      
+      card.innerHTML = `
+        <div class="test-header">
+          <span class="step-num">${t.num}</span>
+          ${t.badge ? `<span class="badge ${t.badge === 'New' ? 'badge-new' : 'badge-wcag'}">${t.badge}</span>` : ''}
+        </div>
+        <div class="test-title">${t.title}</div>
+        <div class="test-desc">${t.desc}</div>
+      `;
+      
+      card.onclick = () => {
+        if (selected.has(t.id)) selected.delete(t.id);
+        else selected.add(t.id);
+        render();
+      };
+      grid.appendChild(card);
+    });
+  }
+
+  function appendLog(text) {
+    const line = document.createElement('div');
+    line.className = 'console-line';
+    if (text.startsWith('🚀')) line.classList.add('cmd');
+    if (text.startsWith('📌')) {
+      line.classList.add('step');
+      currentStepEl.innerText = text.replace('📌 ', '');
+    }
+    if (text.startsWith('✅')) line.classList.add('success');
+    if (text.startsWith('❌')) line.classList.add('error');
+    
+    line.innerText = text;
+    consoleEl.appendChild(line);
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+  }
+
+  function toggleAll(val) {
+    if (val) TESTS.forEach(t => selected.add(t.id));
+    else selected.clear();
+    render();
+  }
+
+  async function executeAudit() {
+    if (selected.size === 0) return alert('Select at least one module');
+    
+    runBtn.disabled = true;
+    engineStatus.innerText = 'RUNNING...';
+    engineStatus.classList.add('pulse');
+    progressArea.style.display = 'block';
+    consoleEl.innerHTML = '';
+    appendLog('🚀 AUDIT: Handshaking with Local Engine...');
+
+    const testList = Array.from(selected).join(',');
+    
+    // Connect to Log Stream
+    const eventSource = new EventSource('/logs');
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      appendLog(data.message);
+      
+      if (data.message.includes('CONSOLIDATING')) {
+        engineStatus.innerText = 'FINISHING...';
+      }
+      if (data.message.includes('Report created')) {
+        engineStatus.innerText = 'COMPLETE ✅';
+        engineStatus.classList.remove('pulse');
+        runBtn.disabled = false;
+        eventSource.close();
+      }
+    };
+
+    // Trigger Audit
+    try {
+      const response = await fetch(`/api/start-audit?tests=${testList}`);
+      if (!response.ok) throw new Error('Engine unreachable');
+    } catch (err) {
+      appendLog(`❌ ERROR: ${err.message}`);
+      runBtn.disabled = false;
+    }
+  }
+
+  render();
+</script>
+</body>
+</html>

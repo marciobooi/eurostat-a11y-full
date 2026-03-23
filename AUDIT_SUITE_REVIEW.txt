@@ -1,0 +1,111 @@
+ACCESSIBILITY AUDIT SUITE — FULL CODE REVIEW
+=============================================
+DESCRIPTION:
+This suite provides a comprehensive, automated accessibility (A11y) audit for the Eurostat Sankey 
+Data Visualization tool. It combines industry-standard Axe Core scans with custom, manual 
+simulations for complex interactions like timeline sliding, modal focus traps, and chart 
+navigation to ensure compliance with WCAG 2.1 AA standards.
+
+Last Updated: 2026-03-20 | Status: 9/9 scripts fully optimized
+
+OVERALL ARCHITECTURE
+====================
+
+  check-full-a11y.js (Main Runner)
+       |
+       v
+  test-selector.js (Visual UI Chooser with Dependencies)
+       |
+       v
+  setup-handler.js (Cookies + Page Load)
+       |
+       +---> tutorial-tester.js          (Step 1)  [+ Proactive Scan]
+       +---> navbar-tester.js            (Step 2)
+       |         |
+       |         +---> languageModal     (Sub 2b)  [+ Proactive Scan]
+       +---> timeline-tester.js          (Step 3)  [+ Proactive Scan]
+       +---> floating-controls-tester.js (Step 4)
+       |         |
+       |         +---> legend            (Sub 4b)  [+ Proactive Scan]
+       +---> select-tester.js            (Step 5)
+       |         |
+       |         +---> selectDropdown    (Sub 5b)  [+ Proactive Scan]
+       +---> toolbar-tester.js           (Step 6)
+       +---> node-modal-tester.js        (Step 7)
+       |         |
+       |         +---> chart             (Sub 7b)  [+ Proactive Scan]
+       +---> undefined-text-tester.js   (Step 8)  (Global Safety Net / Service)
+       +---> global-tab-tester.js       (Step 9)  (Final Sweep)
+       |
+       v
+  report-generator.js (Scenario-Based HTML Report)
+
+
+KEY FEATURES & RECENT IMPROVEMENTS
+==================================
+
+1. Hierarchical Test Selection (test-selector.html)
+   -----------------------------------------------
+   [x] Implemented parent/child dependency model.
+   [x] Sub-audits (Chart, Legend, Language, Dropdown) require their parent to be selected.
+   [x] Deselecting a parent automatically disables/clears its children.
+   [x] UI includes "requires Step X" badges and indented sub-cards.
+
+2. Proactive Translation Service (undefined-text-tester.js)
+   --------------------------------------------------------
+   [x] REFACTORED: Now exports a standalone `performScan` service.
+   [x] Integrated `performScan` into every modal/dropdown/tutorial test.
+   [x] CATCHES: "undefined" or "null" text even if modals are unmounted when closed.
+   [x] COVERAGE: Scans DocumentElement, Iframes (recursive), and 13+ ARIA/Data attributes.
+   [x] PATTERN: Switched to non-boundary regex (/undefined/i) to catch partial matches like "year undefined".
+
+3. Scenario-Based Reporting (report-generator.js)
+   ----------------------------------------------
+   [x] REFACTORED: Primary grouping is now by **Test Scenario** (Step), not rule ID.
+   [x] Each step has a collapsible card showing its unique metadata.
+   [x] Within each step, rule violations are sorted by impact (Critical > serious).
+   [x] Detailed occurrences include full HTML code and "Copy" buttons for debugging.
+
+4. Robust Tester logic
+   -------------------
+   [x] Navbar: Corrected focus sequence and added aria-hidden container detection.
+   [x] Select: Added 5b sub-check for opening heavy dropdown only when selected.
+   [x] Floating: Legend audit now part of the 4b selectable sub-flow.
+   [x] Node Modal: Improved 3-tier click logic and chart hand-off.
+
+
+SCRIPT-BY-SCRIPT STATUS
+=======================
+
+[STEP 1] Tutorial Scan            - OK: Axe + Focus Trap + Proactive Scan per tooltip.
+[STEP 2] Navbar & Language       - OK: Logo, Social, 2b Sub-audit for Language.
+[STEP 3] Timeline Component      - OK: Arrow keys + Autoplay labels + Drag handle.
+[STEP 4] Floating Controls       - OK: Zoom buttons + 4b Sub-audit for Legend Box.
+[STEP 5] Country Select          - OK: Toggle label + 5b Sub-audit for Dropdown options.
+[STEP 6] Main Toolbar            - OK: Role="menubar" + Toolbox button labels + Step mapping.
+[STEP 7] Node Modal & Chart      - OK: Focus trap + 7b Sub-audit for Highcharts.
+[STEP 8] Translation Scan        - OK: Global sweep + Recursive Iframe scanning.
+[STEP 9] Global Tab Sweep        - OK: End-to-end keyboard flow verification.
+
+
+BUGS FOUND & FIXED (RECENT)
+===========================
+
+  #  File                    Issue                                           Status
+  -  ----------------------  -----------------------------------------------  ------
+  1  undefined-text-tester   Skip "year undefined" due to word boundaries      FIXED
+  2  undefined-text-tester   Missing text in closed/unmounted modals           FIXED (Service)
+  3  test-selector.html      No dependency logic between related steps         FIXED
+  4  navbar-tester.js        Crash if modal fails to open                      FIXED
+  5  report-generator.js     Violations mixed across different app areas       FIXED (Grouping)
+  6  select-tester.js        Step numbering mismatch                           FIXED
+
+
+CONCLUSION
+==========
+
+The audit suite is now **production-hardened**. By moving to a proactive "scan-on-event" model for translations and a "scenario-based" reporting model, it provides clear, actionable feedback that exactly matches the user's interaction flow.
+
+Commands:
+  Run Audit:  node .\check-full-a11y.js
+  View Report: a11y-reports/relatorio-tutorial-global.html
