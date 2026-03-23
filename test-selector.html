@@ -1,250 +1,226 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>A11y Audit — Conductor Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>A11y Conductor — Precision Audit Suite</title>
+  
+  <!-- Material Symbols Outlined -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <!-- Google Fonts: Manrope & Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
+  
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#003e96",
+              "primary-container": "#2356b5",
+              "on-primary": "#ffffff",
+              "secondary": "#4f5f7b",
+              "secondary-container": "#cdddff",
+              "on-secondary-container": "#51617e",
+              "surface": "#f8f9fb",
+              "on-surface": "#191c1e",
+              "on-surface-variant": "#434654",
+              "outline": "#737685",
+              "outline-variant": "#c3c6d6",
+              "surface-container-low": "#f3f4f6",
+              "surface-container": "#edeef0",
+              "surface-container-high": "#e7e8ea",
+              "surface-container-highest": "#e1e2e4",
+              "surface-container-lowest": "#ffffff",
+              "error": "#ba1a1a",
+              "on-error": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+  </script>
   <style>
-    :root {
-      --primary: #3b82f6;
-      --primary-glow: rgba(59, 130, 246, 0.5);
-      --bg: #020617;
-      --card-bg: rgba(30, 41, 59, 0.7);
-      --card-border: rgba(51, 65, 85, 0.8);
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent-new: #10b981;
-      --accent-wcag: #f59e0b;
-      --console-bg: rgba(15, 23, 42, 0.9);
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
     }
-    
-    * { box-sizing: border-box; }
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg);
-      background-image: 
-        radial-gradient(circle at 20% 20%, rgba(37, 99, 235, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
-      color: var(--text);
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-      overflow-x: hidden;
+        background-color: #f8f9fb;
+        color: #191c1e;
+        font-family: 'Inter', sans-serif;
     }
-
-    .main-layout {
-      display: grid;
-      grid-template-columns: 1fr 400px;
-      gap: 2rem;
-      padding: 2rem;
-      max-width: 1600px;
-      margin: 0 auto;
-      width: 100%;
-      flex: 1;
+    .editorial-grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 2rem;
     }
-
-    @media (max-width: 1100px) {
-      .main-layout { grid-template-columns: 1fr; }
+    .module-card {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        border: 1px solid transparent;
+        min-height: 180px; /* Smaller cards */
     }
-
-    header { margin-bottom: 2rem; }
-    h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
-    .subtitle { color: var(--text-muted); font-size: 1.1rem; margin-top: 5px; }
-
-    /* Configuration Panel */
-    .config-panel {
-      background: var(--card-bg);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    .module-card:hover { border-color: #edeef0; background: #fff; }
+    .module-card.selected {
+        border-color: #003e96;
+        background-color: #f0f7ff; 
     }
-
-    .test-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-
-    .test-card {
-      background: rgba(15, 23, 42, 0.4);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 1.25rem;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-    .test-card:hover { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 10px 20px -10px var(--primary-glow); }
-    .test-card.selected { border-color: var(--primary); background: rgba(37, 99, 235, 0.1); }
-    .test-card.selected::after {
-      content: '✓'; position: absolute; top: 12px; right: 12px;
-      background: var(--primary); color: white; width: 22px; height: 22px;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;
-    }
-    .test-card.active { border-color: var(--accent-new); box-shadow: 0 0 15px var(--accent-new); }
-
-    .test-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }
-    .step-num { 
-      background: var(--card-border); color: #fff; 
-      font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; 
-    }
-    .test-card.selected .step-num { background: var(--primary); }
-
-    .test-title { font-weight: 600; font-size: 1rem; margin-bottom: 4px; }
-    .test-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; }
-
-    .badge { font-size: 0.6rem; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; }
-    .badge-new { background: var(--accent-new); color: #000; }
-    .badge-wcag { background: var(--accent-wcag); color: #000; }
-
-    /* Console Panel */
-    .console-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      height: 100%;
-    }
-
-    .console-box {
-      flex: 1;
-      background: var(--console-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 1rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      line-height: 1.5;
-      overflow-y: auto;
-      max-height: 700px;
-      box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
-    }
-    .console-line { margin-bottom: 4px; opacity: 0; animation: fadeInConsole 0.3s forwards; }
-    @keyframes fadeInConsole { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
-    .console-line.cmd { color: var(--primary); font-weight: bold; }
-    .console-line.step { color: var(--accent-wcag); font-weight: bold; margin-top: 10px; }
-    .console-line.success { color: var(--accent-new); font-weight: bold; }
-    .console-line.error { color: #ef4444; font-weight: bold; }
-
-    .status-bar {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      padding: 1.5rem;
-      border-radius: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .status-lbl { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
-    .status-val { font-size: 1.2rem; font-weight: 800; font-family: 'Outfit'; }
-
-    .actions { display: flex; gap: 1rem; margin-top: 2rem; }
-    .btn {
-      font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 700;
-      padding: 1rem 2rem; border-radius: 12px; border: none; cursor: pointer;
-      transition: all 0.2s;
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      flex: 1;
-    }
-    .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 14px 0 var(--primary-glow); }
-    .btn-primary:hover { background: #2563eb; transform: translateY(-2px); }
-    .btn-primary:active { transform: translateY(0); }
-    .btn-secondary { background: #334155; color: white; }
+    .module-card.selected h3 { color: #003e96; }
+    .console-line { margin-bottom: 2px; }
+    .console-cmd { color: #60a5fa; font-weight: bold; }
+    .console-step { color: #fbbf24; font-weight: bold; }
+    .console-success { color: #34d399; font-weight: bold; }
+    .console-error { color: #f87171; font-weight: bold; }
     
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
-
-    .pulse { animation: pulseAnim 2s infinite; }
-    @keyframes pulseAnim { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-
-    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
   </style>
 </head>
-<body>
+<body class="bg-surface font-body text-on-surface min-h-screen">
 
-<div class="main-layout">
-  
-  <div class="config-side">
-    <header>
-      <h1>A11y Conductor 🚀</h1>
-      <p class="subtitle">Eurostat Pro Audit Suite — Advanced Conformance Dashboard</p>
-    </header>
+<!-- SideNavBar (Rail) -->
+<aside class="fixed left-0 top-0 h-full z-40 flex flex-col bg-slate-50 border-r border-outline-variant w-64 font-label text-sm font-medium">
+  <div class="p-8">
+    <h1 class="text-xl font-bold tracking-tight text-slate-900 font-headline uppercase leading-none">Audit Ledger</h1>
+    <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Precision Suite</p>
+  </div>
+  <nav class="flex-1 px-4 space-y-2">
+    <a class="flex items-center gap-3 px-4 py-3 text-primary font-bold bg-white border-r-2 border-primary transition-colors" href="#">
+      <span class="material-symbols-outlined">dashboard</span>
+      <span>Audit Center</span>
+    </a>
+    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-xl" href="#">
+      <span class="material-symbols-outlined">receipt_long</span>
+      <span>Report History</span>
+    </a>
+    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-xl" href="#">
+      <span class="material-symbols-outlined">extension</span>
+      <span>Custom Modules</span>
+    </a>
+    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-xl" href="#">
+      <span class="material-symbols-outlined">settings</span>
+      <span>Settings</span>
+    </a>
+  </nav>
+  <div class="p-6 mt-auto space-y-3">
+    <button id="viewReportBtn" style="display:none;" onclick="window.open('/reports/relatorio-tutorial-global.html', '_blank')" 
+            class="w-full flex items-center justify-center gap-2 bg-white border border-primary text-primary py-3 rounded-xl font-headline font-bold text-xs shadow-sm hover:bg-primary/5 transition-all">
+      <span class="material-symbols-outlined text-sm">description</span>
+      VIEW REPORT
+    </button>
+    <button id="runBtn" onclick="executeAudit()"
+            class="w-full flex items-center justify-center gap-2 bg-primary text-white py-4 rounded-xl font-headline font-bold text-xs shadow-lg hover:bg-primary-container transition-all scale-100 active:scale-95 disabled:opacity-50">
+      <span class="material-symbols-outlined text-sm">play_arrow</span>
+      EXECUTE AUDIT
+    </button>
+  </div>
+</aside>
 
-    <div class="config-panel">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="font-family:'Outfit'; margin:0;">Module Selection</h2>
-        <div style="display: flex; gap: 0.5rem;">
-          <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="toggleAll(false)">Clear</button>
-          <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="toggleAll(true)">Select All</button>
-        </div>
+<!-- Main Content Canvas -->
+<main class="ml-64 p-12">
+  <!-- Top Header Info -->
+  <header class="mb-12 flex justify-between items-end">
+    <div>
+      <span class="text-primary font-bold text-[10px] tracking-widest uppercase mb-2 block">Conformance Pipeline</span>
+      <h2 class="text-4xl font-headline font-extrabold text-on-surface tracking-tight">Audit Modules</h2>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2">
+        <button class="text-xs font-bold text-primary hover:underline" onclick="toggleAll(true)">Select All</button>
+        <span class="text-outline">/</span>
+        <button class="text-xs font-bold text-outline hover:underline" onclick="toggleAll(false)">Clear</button>
       </div>
-      
-      <div class="test-grid" id="testGrid">
-        <!-- Dashboard Cards -->
+      <div class="flex items-center gap-4 border-l border-outline-variant pl-6">
+        <div class="flex flex-col items-end">
+          <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider">Session ID</span>
+          <span class="text-xs font-mono text-outline">#CORTEX-A11Y</span>
+        </div>
+        <div class="h-10 w-10 bg-surface-container-high rounded-full flex items-center justify-center border border-outline-variant">
+          <span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+        </div>
       </div>
     </div>
+  </header>
+
+  <div class="editorial-grid">
+    <!-- Left Grid: Modules -->
+    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="testGrid">
+      <!-- Dynamic Content -->
+    </section>
+
+    <!-- Right Column: Sidebar Stats -->
+    <aside class="space-y-6">
+      <!-- Engine Status Panel -->
+      <div class="bg-white p-8 rounded-3xl border border-outline-variant shadow-sm">
+        <div class="flex items-center gap-2 mb-6">
+          <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+          <h4 class="font-headline font-bold text-[10px] tracking-widest uppercase text-outline">ENGINE STATUS</h4>
+        </div>
+        <div class="mb-8">
+          <div class="text-4xl font-headline font-extrabold mb-1 tracking-tighter" id="engineStatus">IDLE</div>
+          <p class="text-xs text-on-surface-variant leading-relaxed font-medium">System awaiting audit parameters. Connection integrity verified.</p>
+        </div>
+        <div class="space-y-4 pt-6 border-t border-surface-container-high" id="progressArea" style="display:none;">
+          <h5 class="text-[10px] font-bold text-outline uppercase tracking-wider">CURRENT PIPELINE</h5>
+          <div class="p-4 bg-primary-container text-white rounded-2xl shadow-inner">
+            <div class="flex items-center gap-3">
+               <span class="material-symbols-outlined animate-spin text-sm">cycle</span>
+               <span id="currentStep" class="text-xs font-bold tracking-tight">ANALYZING DOM...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Console Panel -->
+      <div class="bg-slate-900 text-slate-300 p-6 rounded-3xl font-mono text-[10px] leading-relaxed shadow-2xl border border-slate-800">
+        <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
+          <span class="text-slate-500 font-bold uppercase tracking-widest text-[9px]">system_conductor.log</span>
+          <div class="flex gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
+          </div>
+        </div>
+        <div class="space-y-1 h-[300px] overflow-y-auto pr-2" id="console">
+          <div class="text-white/40 italic">Ready for instruction. Select modules and click 'Execute'.</div>
+        </div>
+      </div>
+    </aside>
   </div>
 
-  <div class="console-side">
-    <div class="console-panel">
-      <div class="status-bar">
-        <div>
-          <div class="status-lbl">Engine Status</div>
-          <div class="status-val" id="engineStatus">IDLE</div>
-        </div>
-        <div id="progressArea" style="display:none;">
-          <div class="status-lbl">Current Pipeline</div>
-          <div id="currentStep" class="status-val" style="font-size: 1rem; color: var(--accent-new);">---</div>
-        </div>
-      </div>
-
-      <div class="console-box" id="console">
-        <div class="console-line">Ready for instruction. Select modules and click 'Execute'.</div>
-      </div>
-
-      <div class="actions">
-        <button class="btn btn-primary" id="runBtn" onclick="executeAudit()">
-          <span>EXECUTE AUDIT</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-        </button>
-        <button class="btn btn-secondary" id="viewReportBtn" style="display:none;" onclick="window.open('/reports/relatorio-tutorial-global.html', '_blank')">
-          <span>VIEW REPORT</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-        </button>
-      </div>
-    </div>
-  </div>
-
-</div>
+  <!-- Removed Floating Actions -->
+</main>
 
 <script>
   const TESTS = [
-    { id: 'tutorial', num: 1, title: 'Tutorial Flow', desc: 'Step-by-step Aria & Focus Trap analysis.', badge: 'ARIA' },
-    { id: 'navbar', num: 2, title: 'Main Navbar', desc: 'Logo, social links, and sub-nav logic.' },
-    { id: 'languageModal', num: '2b', title: 'Language Selector', desc: 'Modal focus trap & translations.', parent: 'navbar' },
-    { id: 'timeline', num: 3, title: 'Timeline Slider', desc: 'Keyboard navigation & drag-alts.', badge: 'WCAG 2.5.7' },
-    { id: 'floatingControls', num: 4, title: 'Floating UI', desc: 'Zoom/Legend interaction logic.' },
-    { id: 'legend', num: '4b', title: 'Legend Content', desc: 'Dynamic scan of legend categories.', parent: 'floatingControls' },
-    { id: 'select', num: 5, title: 'Geo Select', desc: 'ECL Multi-select and toolbar labels.' },
-    { id: 'selectDropdown', num: '5b', title: 'Select Options', desc: 'Search input & dropdown depth.', parent: 'select' },
-    { id: 'toolbar', num: 6, title: 'Main Toolbar', desc: 'Menubar structure & display toggles.', badge: 'Critical' },
-    { id: 'nodeModal', num: 7, title: 'Detail Modals', desc: 'Sankey dialog patterns and focus.', badge: 'Standard' },
-    { id: 'chart', num: '7b', title: 'Highcharts View', desc: 'SVG tags and Proxy Tree logic.', parent: 'nodeModal', badge: 'EAA' },
-    { id: 'undefinedText', num: 8, title: 'Translation Scan', desc: 'Undefined/Null/NaN monitoring.', badge: 'QA' },
-    { id: 'globalTabbing', num: 9, title: 'Full Keyboard Sweep', desc: 'End-to-end focus sequence scan.' },
-    { id: 'forcedColors', num: 10, title: 'High Contrast Mode', desc: 'OS-level color emulation audit.', badge: 'OS' },
-    { id: 'reducedMotion', num: 11, title: 'Reduced Motion', desc: 'Animation suppression validation.', badge: 'OS' },
-    { id: 'textSpacing', num: 12, title: 'Text Spacing', desc: 'WCAG 1.4.12 overflow testing.', badge: 'WCAG 2.1' },
-    { id: 'targetSize', num: 13, title: 'Target Size', desc: 'WCAG 2.2 24px minimum verify.', badge: 'WCAG 2.2' },
-    { id: 'reflow', num: '13b', title: 'Reflow (400%)', desc: 'SC 1.4.10 Scroll-check at 320px.', badge: 'WCAG 2.1' },
-    { id: 'contrast', num: '13c', title: 'Global Contrast', desc: 'SC 1.4.3 Automatable color sweep.', badge: 'WCAG 2.1' },
-    { id: 'statusMessages', num: '13d', title: 'Status Messages', desc: 'SC 4.1.3 aria-live region scan.', badge: 'WCAG 2.1' },
-    { id: 'globalStructure', num: 14, title: 'Page Structure', desc: 'H1 Headings & Landmark regions.', badge: 'Landmark' }
+    { id: 'tutorial', num: 1, title: 'Tutorial Flow', icon: 'auto_stories', desc: 'Step-by-step Aria & Focus Trap analysis.', badge: 'ARIA' },
+    { id: 'navbar', num: 2, title: 'Main Navbar', icon: 'view_compact', desc: 'Logo, social links, and sub-nav logic.', badge: 'WCAG' },
+    { id: 'languageModal', num: '2b', title: 'Language', icon: 'language', desc: 'Modal focus trap & translations.', parent: 'navbar', badge: 'I18N' },
+    { id: 'timeline', num: 3, title: 'Timeline Slider', icon: 'linear_scale', desc: 'Keyboard navigation & drag-alts.', badge: 'CONTROLS' },
+    { id: 'floatingControls', num: 4, title: 'Floating UI', icon: 'layers', desc: 'Zoom/Legend interaction logic.', badge: 'Z-INDEX' },
+    { id: 'legend', num: '4b', title: 'Legend Content', icon: 'list_alt', desc: 'Dynamic scan of legend categories.', parent: 'floatingControls' },
+    { id: 'select', num: 5, title: 'Geo Select', icon: 'public', desc: 'ECL Multi-select and toolbar labels.' },
+    { id: 'selectDropdown', num: '5b', title: 'Dropdown Depth', icon: 'expand_more', desc: 'Search input & dropdown depth.', parent: 'select' },
+    { id: 'toolbar', num: 6, title: 'Main Toolbar', icon: 'build', desc: 'Menubar structure & toolbox.', badge: 'CRITICAL' },
+    { id: 'nodeModal', num: 7, title: 'Sankey Nodes', icon: 'hub', desc: 'Dialog patterns and focus.', badge: 'SVG' },
+    { id: 'chart', num: '7b', title: 'Proxy Tree', icon: 'account_tree', desc: 'SVG tags and Proxy Tree logic.', parent: 'nodeModal', badge: 'EAA' },
+    { id: 'undefinedText', num: 8, title: 'Missing Strings', icon: 'translate', desc: 'Undefined/Null/NaN monitoring.', badge: 'QA' },
+    { id: 'globalTabbing', num: 9, title: 'Keyboard Sweep', icon: 'keyboard', desc: 'End-to-end focus sequence.' },
+    { id: 'forcedColors', num: 10, title: 'Contrast OS', icon: 'contrast', desc: 'High Contrast Mode audit.', badge: 'EMU' },
+    { id: 'reducedMotion', num: 11, title: 'Reduced Motion', icon: 'motion_photos_off', desc: 'Animation suppression.', badge: 'EMU' },
+    { id: 'textSpacing', num: 12, title: 'Text Spacing', icon: 'format_line_spacing', desc: 'WCAG 1.4.12 overflow.', badge: 'WCAG 2.1' },
+    { id: 'targetSize', num: 13, title: 'Target Size', icon: 'ads_click', desc: 'WCAG 2.2 24px minimum.', badge: 'WCAG 2.2' },
+    { id: 'reflow', num: '13b', title: 'Reflow 400%', icon: 'reorder', desc: 'Scroll-check at 320px.', badge: 'WCAG 2.1' },
+    { id: 'contrast', num: '13c', title: 'Axe Contrast', icon: 'palette', desc: 'Global color sweep.', badge: 'WCAG 2.1' },
+    { id: 'statusMessages', num: '13d', title: 'Live Regions', icon: 'notification_important', desc: 'aria-live region scan.', badge: 'ARIA' },
+    { id: 'globalStructure', num: 14, title: 'Landmarks', icon: 'map', desc: 'H1 & Landmark regions.', badge: 'STRUC' }
   ];
 
   const grid = document.getElementById('testGrid');
@@ -254,25 +230,31 @@
   const engineStatus = document.getElementById('engineStatus');
   const progressArea = document.getElementById('progressArea');
   const currentStepEl = document.getElementById('currentStep');
+  const statusDot = document.getElementById('statusDot');
   
-  const selected = new Set(TESTS.map(t => t.id));
+  const selected = new Set(['tutorial', 'navbar', 'timeline', 'floatingControls', 'select', 'toolbar']);
 
   function render() {
     grid.innerHTML = '';
     TESTS.forEach(t => {
-      const card = document.createElement('div');
-      card.className = `test-card ${selected.has(t.id) ? 'selected' : ''}`;
+      const isParentDisabled = t.parent && !selected.has(t.parent);
+      const isSelected = selected.has(t.id);
       
-      const parentDisabled = t.parent && !selected.has(t.parent);
-      if (parentDisabled) card.classList.add('disabled');
+      const card = document.createElement('div');
+      card.className = `module-card p-5 rounded-2xl flex flex-col justify-between ${isSelected ? 'selected' : ''} bg-white shadow-sm ${isParentDisabled ? 'opacity-40 grayscale pointer-events-none' : ''}`;
       
       card.innerHTML = `
-        <div class="test-header">
-          <span class="step-num">${t.num}</span>
-          ${t.badge ? `<span class="badge ${t.badge === 'New' ? 'badge-new' : 'badge-wcag'}">${t.badge}</span>` : ''}
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-primary text-2xl font-bold">${t.icon || 'settings_input_component'}</span>
+            ${t.badge ? `<span class="bg-surface-container-high text-on-surface-variant text-[8px] px-1.5 py-0.5 rounded font-bold uppercase tracking-tight">${t.badge}</span>` : ''}
+          </div>
+          <h3 class="font-headline text-[15px] font-extrabold text-on-surface leading-snug">${t.title}</h3>
+          <p class="text-[11px] text-outline mt-1 font-medium leading-relaxed">${t.desc}</p>
         </div>
-        <div class="test-title">${t.title}</div>
-        <div class="test-desc">${t.desc}</div>
+        <div class="flex flex-col gap-1 mt-4 border-t border-surface-container pt-3">
+          <span class="text-[9px] font-bold text-outline/40 uppercase tracking-widest">UNIT ${t.num}</span>
+        </div>
       `;
       
       card.onclick = () => {
@@ -287,15 +269,17 @@
   function appendLog(text) {
     const line = document.createElement('div');
     line.className = 'console-line';
-    if (text.startsWith('🚀')) line.classList.add('cmd');
-    if (text.startsWith('📌')) {
-      line.classList.add('step');
-      currentStepEl.innerText = text.replace('📌 ', '');
-    }
-    if (text.startsWith('✅')) line.classList.add('success');
-    if (text.startsWith('❌')) line.classList.add('error');
     
-    line.innerText = text;
+    // Check for icons/colors
+    if (text.startsWith('🚀')) line.classList.add('console-cmd');
+    if (text.startsWith('📌')) {
+      line.classList.add('console-step');
+      if (currentStepEl) currentStepEl.innerText = text.replace('📌 ', '');
+    }
+    if (text.startsWith('✅')) line.classList.add('console-success');
+    if (text.startsWith('❌')) line.classList.add('console-error');
+    
+    line.innerHTML = `<span class="opacity-30 mr-2">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})}</span> ${text}`;
     consoleEl.appendChild(line);
     consoleEl.scrollTop = consoleEl.scrollHeight;
   }
@@ -315,38 +299,44 @@
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       
-      // Update UI based on engine state
       if (data.isRunning) {
         runBtn.disabled = true;
-        engineStatus.innerText = 'RUNNING...';
-        engineStatus.classList.add('pulse');
+        engineStatus.innerText = 'RUNNING';
+        engineStatus.className = 'text-4xl font-headline font-extrabold mb-1 tracking-tighter text-primary animate-pulse';
+        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-primary animate-ping';
         progressArea.style.display = 'block';
         if (data.currentStep && data.currentStep !== 'IDLE') {
           currentStepEl.innerText = data.currentStep.replace('📌 ', '');
         }
       } else if (!data.message.includes('Report created')) {
-        engineStatus.innerText = 'IDLE';
-        engineStatus.classList.remove('pulse');
+        engineStatus.innerText = 'ONLINE';
+        engineStatus.className = 'text-4xl font-headline font-extrabold mb-1 tracking-tighter text-emerald-500';
+        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500';
         runBtn.disabled = false;
+        progressArea.style.display = 'none';
       }
 
       appendLog(data.message);
       
       if (data.message.includes('CONSOLIDATING')) {
-        engineStatus.innerText = 'FINISHING...';
+        engineStatus.innerText = 'FINALIZING';
+        engineStatus.className = 'text-4xl font-headline font-extrabold mb-1 tracking-tighter text-amber-500';
       }
       
       if (data.message.includes('Report created')) {
-        engineStatus.innerText = 'COMPLETE ✅';
-        engineStatus.classList.remove('pulse');
+        engineStatus.innerText = 'COMPLETE';
+        engineStatus.className = 'text-4xl font-headline font-extrabold mb-1 tracking-tighter text-emerald-600';
+        statusDot.className = 'w-2.5 h-2.5 rounded-full bg-emerald-600';
         runBtn.disabled = false;
         viewReportBtn.style.display = 'flex';
+        progressArea.style.display = 'none';
       }
     };
 
     eventSource.onerror = () => {
       engineStatus.innerText = 'OFFLINE';
-      engineStatus.classList.remove('pulse');
+      engineStatus.className = 'text-4xl font-headline font-extrabold mb-1 tracking-tighter text-error';
+      statusDot.className = 'w-2.5 h-2.5 rounded-full bg-error';
       runBtn.disabled = true;
     };
   }
@@ -355,7 +345,7 @@
     if (selected.size === 0) return alert('Select at least one module');
     
     runBtn.disabled = true;
-    engineStatus.innerText = 'INITIATING...';
+    engineStatus.innerText = 'INIT...';
     consoleEl.innerHTML = '';
     viewReportBtn.style.display = 'none';
     
