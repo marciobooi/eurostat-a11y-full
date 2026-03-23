@@ -1,11 +1,11 @@
 /**
  * DOM Translation Checker Service.
+ * Deeply scans the DOM for "undefined", "null", "NaN" or "[object Object]".
  */
 
-// Internal scanner function that can be called multiple times
 async function performScan(page, allViolations, stepLabel) {
   const results = await page.evaluate(() => {
-    const PATTERNS = [/undefined/i, /null/i, /NaN/];
+    const PATTERNS = [/undefined/i, /null/i, /NaN/g, /\[object Object\]/i];
     const issues = [];
     const seen = new Set();
     const VISITED_DOCS = new Set();
@@ -30,74 +30,107 @@ async function performScan(page, allViolations, stepLabel) {
       return parts.join(' > ');
     }
 
-    const ATTRS = [
-      'aria-label', 'aria-placeholder', 'aria-valuetext', 'aria-roledescription',
-      'title', 'alt', 'placeholder', 'data-ecl-label', 'data-bs-original-title',
-      'data-original-title', 'data-content', 'data-toggle-label', 'value'
-    ];
-
     function scanDocument(doc, docName = 'top') {
       if (!doc || VISITED_DOCS.has(doc)) return;
       VISITED_DOCS.add(doc);
 
+      // --- 1. Scan Text Nodes ---
       const walker = doc.createTreeWalker(doc, NodeFilter.SHOW_TEXT, {
         acceptNode(node) {
           const parent = node.parentElement;
           if (!parent) return NodeFilter.FILTER_REJECT;
           const tag = parent.tagName.toLowerCase();
-          return (['script', 'style', 'noscript', 'head'].includes(tag)) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+          // Skip technical junk
+          if (['script', 'style', 'noscript', 'head', 'template'].includes(tag)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
         }
       });
 
       let node;
       while ((node = walker.nextNode())) {
-        const text = node.textContent;
-        if (!text || text.length < 3) continue;
+        const text = node.textContent.trim();
+        if (!text) continue;
+        
         for (const pattern of PATTERNS) {
           if (pattern.test(text)) {
             const el = node.parentElement;
             const displayPath = `[${docName}] ${getPath(el)}`;
-            const fullText = text.trim();
-            const key = `text|${displayPath}|${fullText.substring(0, 50)}`;
+            // Key for deduplication
+            const key = `text|${displayPath}|${text.substring(0, 30)}`;
             if (!seen.has(key)) {
               seen.add(key);
-              issues.push({ type: 'text node', text: fullText.substring(0, 150), html: el.outerHTML.substring(0, 300), path: displayPath });
+              issues.push({ 
+                type: 'text content', 
+                text: text.substring(0, 150), 
+                html: el.outerHTML.substring(0, 400), 
+                path: displayPath 
+              });
             }
             break;
           }
         }
       }
 
+      // --- 2. Scan All Attributes for every element ---
       doc.querySelectorAll('*').forEach(el => {
-        if (el.tagName === 'IFRAME') { try { scanDocument(el.contentDocument, 'iframe'); } catch(e) {} }
-        for (const attr of ATTRS) {
-          const val = el.getAttribute(attr);
-          if (val && (val.toLowerCase().includes('undefined') || val.toLowerCase().includes('null') || val.includes('NaN'))) {
-            const displayPath = `[${docName}] ${getPath(el)}`;
-            const key = `attr|${attr}|${displayPath}`;
-            if (!seen.has(key)) {
-              seen.add(key);
-              issues.push({ type: `attribute [${attr}]`, text: val.substring(0, 150), html: el.outerHTML.substring(0, 300), path: displayPath });
+        // Handle iframes
+        if (el.tagName === 'IFRAME') {
+          try { scanDocument(el.contentDocument, 'iframe'); } catch(e) {}
+        }
+        
+        // Check attributes
+        const attributes = el.attributes;
+        for (let i = 0; i < attributes.length; i++) {
+          const attr = attributes[i];
+          const name = attr.name;
+          const val = attr.value;
+          
+          if (!val) continue;
+
+          for (const pattern of PATTERNS) {
+            if (pattern.test(val)) {
+              const displayPath = `[${docName}] ${getPath(el)}`;
+              const key = `attr|${name}|${displayPath}|${val.substring(0, 30)}`;
+              if (!seen.has(key)) {
+                seen.add(key);
+                issues.push({ 
+                  type: `attribute [${name}]`, 
+                  text: val.substring(0, 150), 
+                  html: el.outerHTML.substring(0, 400), 
+                  path: displayPath 
+                });
+              }
+              break;
             }
           }
         }
       });
     }
+
     scanDocument(document);
     return issues;
   });
 
   results.forEach(r => {
-    // Deduplicate against already found violations in the same step
-    const duplicate = allViolations.find(v => v.id === 'undefined-text-in-dom' && v.nodes[0] && v.nodes[0].html === r.html);
+    // Only push if not already identified as a duplicate in this step
+    const duplicate = allViolations.find(v => 
+      v.id === 'undefined-text-in-dom' && 
+      v.nodes[0] && 
+      v.nodes[0].html === r.html &&
+      v.nodes[0].failureSummary.includes(r.type)
+    );
+
     if (!duplicate) {
       allViolations.push({
         id: 'undefined-text-in-dom',
         impact: 'serious',
-        description: `Text or attribute contains "undefined", "null" or "NaN". Missing translation or data binding!`,
-        help: 'Check i18n keys and data-bound values.',
+        description: `Potential unformatted data or missing translation key found in the DOM.`,
+        help: `The value "${r.text}" was detected. Ensure all variables are correctly bound and i18n keys are resolved.`,
         step: stepLabel,
-        nodes: [{ html: r.html, failureSummary: `[${r.type}] Found "${r.text}"` }]
+        nodes: [{ 
+          html: r.html, 
+          failureSummary: `[${r.type}] Found suspicious value: "${r.text}" at ${r.path}` 
+        }]
       });
     }
   });
@@ -106,17 +139,16 @@ async function performScan(page, allViolations, stepLabel) {
 }
 
 /**
- * Main Step Function
+ * Audit Step Interface
  */
 async function testUndefinedText(page, allViolations) {
-  console.log('\n📌 STEP 8: Scanning DOM for Missing Translations (Global Sweep)...');
+  console.log('\n📌 STEP 8: Deep Scanning DOM for Data Binding & Translation Errors...');
   const count = await performScan(page, allViolations, 'DOM Translation Scan');
   if (count === 0) {
-    console.log('   ✅ No "undefined" / "null" / "NaN" values found.');
+    console.log('   ✅ No "undefined", "null", "NaN" or "[object Object]" found.');
   } else {
-    console.log(`   ⚠️ Found ${count} instance(s) of undefined/null/NaN.`);
+    console.log(`   ⚠️ CRITICAL: Found ${count} instance(s) of broken data/translations!`);
   }
-  console.log('   ✅ Step 8 complete.');
 }
 
 module.exports = testUndefinedText;
