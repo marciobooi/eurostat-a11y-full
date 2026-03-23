@@ -1,642 +1,905 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A11y Global Report</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --card-bg: #ffffff;
-      --border: #e2e8f0;
-      --critical: #ef4444;
-      --serious: #f97316;
-      --moderate: #eab308;
-      --minor: #3b82f6;
-      --font: 'Inter', system-ui, -apple-system, sans-serif;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-      font-family: var(--font);
-      background-color: var(--bg);
-      color: var(--text-main);
-      padding: 2rem;
-    }
-
-    .container { max-width: 1200px; margin: 0 auto; }
-
-    header { margin-bottom: 3rem; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
-    h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
-    .subtitle { color: var(--text-muted); font-size: 1rem; }
-
-    .summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
-    .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-    .stat-card.critical { border-top: 4px solid var(--critical); }
-    .stat-card.serious { border-top: 4px solid var(--serious); }
-    .stat-card.moderate { border-top: 4px solid var(--moderate); }
-    .stat-card.minor { border-top: 4px solid var(--minor); }
-    .stat-value { font-size: 2.5rem; font-weight: 800; }
-    .stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
-
-    .step-section { 
-      background: var(--card-bg); 
-      border-radius: 12px; 
-      border: 1px solid var(--border); 
-      margin-bottom: 2rem;
-      overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    .step-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1.2rem 1.5rem;
-      background: linear-gradient(135deg, #fdfdfd, #f8fafc);
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .step-header:hover { background: #f1f5f9; }
-
-    .step-num-badge {
-      background: #0f172a;
-      color: #f8fafc;
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 999px;
-      flex-shrink: 0;
-    }
-
-    .step-title { font-size: 1.1rem; font-weight: 800; flex: 1; }
-    
-    .badge { padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-    .badge.critical { background: #fee2e2; color: #991b1b; }
-    .badge.serious { background: #ffedd5; color: #c2410c; }
-    .badge.moderate { background: #fef9c3; color: #854d0e; }
-    .badge.minor { background: #dbeafe; color: #1e40af; }
-
-    .step-content { display: none; padding: 1.5rem; border-top: 1px solid var(--border); }
-    .step-content.expanded { display: block; }
-
-    .rule-card {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin-bottom: 1.5rem;
-      overflow: hidden;
-    }
-
-    .rule-header {
-      padding: 1rem;
-      background: #fafafa;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .rule-title { font-weight: 700; font-size: 0.95rem; }
-
-    .rule-body { padding: 1rem; }
-    .rule-desc { font-size: 0.95rem; margin-bottom: 0.5rem; line-height: 1.5; color: #334155; }
-    .rule-help { font-size: 0.85rem; color: #64748b; }
-    .rule-help a { color: #3b82f6; text-decoration: none; font-weight: 600; }
-
-    .occ-grid { margin-top: 1rem; }
-    .node-item { background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    .node-reason { font-weight: 700; color: #b91c1c; font-size: 0.85rem; }
-    .node-target { font-family: 'JetBrains Mono', monospace; background: #e2e8f0; padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.75rem; color: #475569; }
-
-    .code-block { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; overflow-x: auto; margin: 1rem 0; }
-    .actions { display: flex; gap: 0.5rem; }
-    .btn { background: white; border: 1px solid var(--border); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; }
-    .btn:hover { background: #f1f5f9; }
-    .btn.success { background: #10b981; color: white; border-color: #10b981; }
-
-    .chevron { transition: transform 0.2s; }
-    .expanded .chevron { transform: rotate(180deg); }
-  </style>
-  <script>
-    function toggleStep(el) {
-      const content = el.nextElementSibling;
-      el.classList.toggle('expanded');
-      content.classList.toggle('expanded');
-    }
-
-    function copyHiddenText(ev, btn) {
-      ev.stopPropagation();
-      const textarea = btn.nextElementSibling;
-      const text = textarea.value;
-      const el = document.createElement('textarea');
-      el.value = text;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-      
-      const originalText = btn.innerHTML;
-      btn.classList.add('success');
-      btn.innerHTML = '✓ Copied!';
-      setTimeout(() => {
-        btn.classList.remove('success');
-        btn.innerHTML = originalText;
-      }, 2000);
-    }
-  </script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>A11y Audit Report - Audit Integrity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+          tailwind.config = {
+            darkMode: "class",
+            theme: {
+              extend: {
+                colors: {
+                  primary: "#1d4ed8",
+                  surface: "#f8f9fb",
+                  "surface-container": "#edeef0",
+                  "on-primary": "#ffffff",
+                  critical: "#dc2626",
+                  serious: "#ea580c",
+                  moderate: "#ca8a04",
+                  minor: "#2563eb"
+                },
+                fontFamily: {
+                  headline: ["Manrope"],
+                  body: ["Inter"]
+                }
+              }
+            }
+          }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        body { background-color: #f8f9fb; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #f8f9fb; border-right: 1px solid #e1e2e4; height: 100vh; position: sticky; top: 0; }
+        .nav-item { transition: all 0.2s; border-radius: 0.75rem; }
+        .nav-item:hover { background: #f3f4f6; }
+        .nav-item.active { background: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .issue-card { border-left: 4px solid; }
+        .issue-card.critical { border-left-color: #dc2626; background: #fef2f2; }
+        .issue-card.serious { border-left-color: #ea580c; background: #fffaf0; }
+        .issue-card.moderate { border-left-color: #ca8a04; background: #fefce8; }
+        .issue-card.minor { border-left-color: #2563eb; background: #eff6ff; }
+        
+        .code-block { background: #0f172a; color: #f8fafc; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; border-radius: 0.75rem; padding: 1.25rem; }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <header>
-      <h1>A11y Audit Dashboard 🚀</h1>
-      <p class="subtitle">Detailed report grouped by test scenario. Total steps tested: 4</p>
-      
-      <div class="summary-stats">
-        <div class="stat-card critical"><span class="stat-value" style="color: var(--critical)">0</span><div class="stat-label">Critical</div></div>
-        <div class="stat-card serious"><span class="stat-value" style="color: var(--serious)">3</span><div class="stat-label">Serious</div></div>
-        <div class="stat-card moderate"><span class="stat-value" style="color: var(--moderate)">1</span><div class="stat-label">Moderate</div></div>
-        <div class="stat-card minor"><span class="stat-value" style="color: var(--minor)">0</span><div class="stat-label">Minor</div></div>
-      </div>
-    </header>
+<body class="bg-surface text-slate-900 font-body">
 
-    <div class="steps-container">
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step ?</span>
-            <span class="step-title">Reflow (1.4.10)</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge serious" style="background: ; color: ">
-                1 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">reflow-horizontal-scroll</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Horizontal scrolling detected at 320px width (Reflow 1.4.10).</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Ensure content reflows vertically without requiring horizontal scroll at 320px.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Horizontal scroll detected.
-                        </div>
-                        
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;html&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;html&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Horizontal scroll detected.</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-            
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 1</span>
-            <span class="step-title">Tutorial Scan</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 2</span>
-            <span class="step-title">Navbar</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 2</span>
-            <span class="step-title">Navbar — Tab Sequence</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 2b</span>
-            <span class="step-title">Language Modal</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 2b</span>
-            <span class="step-title">Language Overlay</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 3</span>
-            <span class="step-title">Timeline Component</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 4</span>
-            <span class="step-title">Zoom Controls</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 4b</span>
-            <span class="step-title">Legend Box</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 5</span>
-            <span class="step-title">Country Select</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 6</span>
-            <span class="step-title">Main Toolbar</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 7</span>
-            <span class="step-title">Sankey Nodes &amp; Modals</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 7b</span>
-            <span class="step-title">Highcharts Chart</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 8</span>
-            <span class="step-title">Translation Scan</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 9</span>
-            <span class="step-title">Global Tab Sweep</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 10</span>
-            <span class="step-title">High Contrast Emulation</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 11</span>
-            <span class="step-title">Reduced Motion Emulation</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 12</span>
-            <span class="step-title">Text Spacing (1.4.12)</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge serious" style="background: ; color: ">
-                1 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">text-spacing-clipping</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge serious">serious</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Text spacing override caused potential clipping in element &lt;SPAN&gt; #</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Ensure containers can expand or overflow to accommodate standard a11y text spacing.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Overflow detected: &quot;Selected country:&quot;
-                        </div>
-                        
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;span class=&quot;visually-hidden&quot;&gt;Selected country:&lt;/span&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;span class=&quot;visually-hidden&quot;&gt;Selected country:&lt;/span&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Overflow detected: &quot;Selected country:&quot;</textarea>
-                        </div>
-                      </div>
-                    
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> Overflow detected: &quot;Selected unit:&quot;
-                        </div>
-                        
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">unknown</span>
-                        </div>
-                        <div class="code-block">&lt;span class=&quot;visually-hidden&quot;&gt;Selected unit:&lt;/span&gt;</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">&lt;span class=&quot;visually-hidden&quot;&gt;Selected unit:&lt;/span&gt;</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">Overflow detected: &quot;Selected unit:&quot;</textarea>
-                        </div>
-                      </div>
-                    
-                  </div>
-                </div>
-              </div>
-            
-            
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 13</span>
-            <span class="step-title">Target Size (2.5.8)</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge " style="background: #dcfce7; color: #166534">
-                0 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-            <div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>
-          </div>
-        </div>
-      
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step 14</span>
-            <span class="step-title">Global Page Structure</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge serious" style="background: ; color: ">
-                1 unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">content-outside-landmarks</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    
-                    <span class="badge moderate">moderate</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">Some interactive content exists outside of landmark regions.</div>
-                  <div class="rule-help">👉 <a href="#" target="_blank">Ensure all content is reachable via landmark navigation.</a></div>
-                  
-                  <div class="occ-grid">
-                    
-                  </div>
-                </div>
-              </div>
-            
-            
-          </div>
-        </div>
-      
+<!-- Top Navigation -->
+<nav class="bg-white border-b border-slate-200 h-16 flex items-center px-8 sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center gap-2 mr-12">
+        <span class="material-symbols-outlined text-primary font-bold">verified_user</span>
+        <h1 class="text-xl font-headline font-extrabold tracking-tight">Audit Integrity</h1>
     </div>
-  </div>
+    <div class="flex items-center gap-8 text-sm font-semibold text-slate-500">
+        <a href="#" class="hover:text-primary">Dashboard</a>
+        <a href="#" class="text-primary border-b-2 border-primary py-5">Audits</a>
+        <a href="#" class="hover:text-primary text-slate-400">Reports</a>
+        <a href="#" class="hover:text-primary text-slate-400">Settings</a>
+    </div>
+    <div class="ml-auto flex items-center gap-4">
+        <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            <input type="text" placeholder="Search audits..." class="bg-slate-100 border-none rounded-full py-2 pl-10 pr-4 text-xs w-64"/>
+        </div>
+        <span class="material-symbols-outlined text-slate-400">notifications</span>
+        <span class="material-symbols-outlined text-slate-400">history</span>
+    </div>
+</nav>
+
+<div class="flex">
+    <!-- Left Sidebar -->
+    <aside class="w-80 sidebar p-6 flex flex-col pt-12">
+        <div class="mb-10 pl-4">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2 bg-primary rounded-lg text-white">
+                    <span class="material-symbols-outlined text-lg">description</span>
+                </div>
+                <div>
+                  <h3 class="font-headline font-extrabold text-sm leading-none">Report View</h3>
+                  <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Accessibility Compliance</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="space-y-1 mb-12">
+            <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-900 active">
+                <span class="material-symbols-outlined text-sm">analytics</span> Summary
+            </a>
+            <a href="#" class="nav-item flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-500">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-sm text-critical">cancel</span> Critical Issues
+                </div>
+                <span class="bg-red-50 text-critical px-2 rounded-full text-[10px]">3</span>
+            </a>
+            <a href="#" class="nav-item flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-500">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-sm text-serious">warning</span> Serious Issues
+                </div>
+                <span class="bg-orange-50 text-serious px-2 rounded-full text-[10px]">5</span>
+            </a>
+            <a href="#" class="nav-item flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-500">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-sm text-moderate">info</span> Moderate Issues
+                </div>
+                <span class="bg-yellow-50 text-moderate px-2 rounded-full text-[10px]">3</span>
+            </a>
+        </nav>
+
+        <div class="mt-auto space-y-2 border-t border-slate-200 pt-6">
+            <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Export PDF
+            </button>
+            <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                <span class="material-symbols-outlined text-sm">settings</span> Audit Settings
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-12 max-w-[1400px]">
+        <header class="mb-12">
+            <h2 class="text-4xl font-headline font-extrabold text-slate-900 tracking-tight mb-2">Audit Report: Accessibility Scan</h2>
+            <div class="flex items-center gap-3 text-sm font-medium">
+                <span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                <p class="text-slate-600">Comprehensive WCAG 2.1 Level AA Compliance Review — <span class="text-slate-400">Last scanned at 3/23/2026, 12:20:31 PM</span></p>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-4 gap-6 mb-16">
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border-b-4 border-slate-200 flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Critical</span>
+                <span class="text-5xl font-headline font-extrabold text-critical">3</span>
+            </div>
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border-b-4 border-serious flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Serious</span>
+                <span class="text-5xl font-headline font-extrabold text-serious">5</span>
+            </div>
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border-b-4 border-moderate flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Moderate</span>
+                <span class="text-5xl font-headline font-extrabold text-moderate">3</span>
+            </div>
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border-b-4 border-minor flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Minor</span>
+                <span class="text-5xl font-headline font-extrabold text-slate-900">0</span>
+            </div>
+        </div>
+
+        <section class="space-y-4">
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="1">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Tutorial Scan</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="2">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Navbar</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="2">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Navbar — Tab Sequence</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="2b">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Language Modal</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="2b">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Language Overlay</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="3">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Timeline Component</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">3 Unique Issues</span>
+                            
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 ">
+                        
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card critical shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-critical">critical</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">slider-keyboard-nav-failed</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">Slider does not respond to ArrowLeft key.</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">Sliders must support Arrow keys for accessible interaction.</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">Keydown ArrowLeft did not update aria-valuenow.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        &lt;span tabindex=&quot;0&quot; class=&quot;ui-slider-handle ui-corner-all ui-state-default ui-state-focus&quot; role=&quot;slider&quot; aria-orientation=&quot;horizontal&quot; aria-valuemin=&quot;2010&quot; aria-valuemax=&quot;2024&quot; aria-valuenow=&quot;2024&quot; style=&quot;left: 85.7143%;&quot;&gt;&lt;div id=&quot;sliderTimePeriod&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;2022&lt;/span&gt;&lt;/div&gt;&lt;/span&gt;
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: N/A</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card serious shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-serious">serious</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">aria-input-field-name</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">Ensure every ARIA input field has an accessible name</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">ARIA input fields must have an accessible name</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">Fix any of the following:
+  aria-label attribute does not exist or is empty
+  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty
+  Element has no title attribute</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        &lt;span tabindex=&quot;0&quot; class=&quot;ui-slider-handle ui-corner-all ui-state-default&quot; role=&quot;slider&quot; aria-orientation=&quot;horizontal&quot; aria-valuemin=&quot;2010&quot; aria-valuemax=&quot;2024&quot; aria-valuenow=&quot;2024&quot; style=&quot;left: 100%;&quot;&gt;&lt;div id=&quot;sliderTimePeriod&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;2024&lt;/span&gt;&lt;/div&gt;&lt;/span&gt;
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: .ui-slider-handle</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card serious shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-serious">serious</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">slider-no-name</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">Slider handle (.ui-slider-handle) missing an accessible name.</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">Add aria-label to the slider handle.</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">Element failed standard validation.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        &lt;span tabindex=&quot;0&quot; class=&quot;ui-slider-handle ui-corner-all ui-state-default&quot; role=&quot;slider&quot; aria-orientation=&quot;horizontal&quot; aria-valuemin=&quot;2010&quot; aria-valuemax=&quot;2024&quot; aria-valuenow=&quot;2024&quot; style=&quot;left: 100%;&quot;&gt;&lt;div id=&quot;sliderTimePeriod&quot; aria-hidden=&quot;true&quot;&gt;&lt;span&gt;2024&lt;/span&gt;&lt;/div&gt;&lt;/span&gt;
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: N/A</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="4">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Zoom Controls</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="4b">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Legend Box</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="5">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Country Select</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="6">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Main Toolbar</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">5 Unique Issues</span>
+                            
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 ">
+                        
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card critical shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-critical">critical</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">aria-required-children</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">Ensure elements with an ARIA role that require child roles contain them</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">Certain ARIA roles must contain particular children</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">Fix any of the following:
+  Element has children which are not allowed: li[tabindex]</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        &lt;ul id=&quot;sankeyToolbox&quot; role=&quot;menubar&quot; aria-label=&quot;Sankey graph toolbox&quot; class=&quot;navbar-nav ms-auto my-2 my-lg-0 navbar-nav-scroll d-flex align-items-center&quot; style=&quot;--bs-scroll-height: 50vw;&quot;&gt;
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: #sankeyToolbox</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card critical shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-critical">critical</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">menubar-invalid-children</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">Direct children of role=&quot;menubar&quot; must be role=&quot;menuitem&quot; or role=&quot;none&quot;. Found &lt;li&gt; with native focus or role.</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">Give &lt;li&gt; tags in menubars role=&quot;none&quot; and put role=&quot;menuitem&quot; on inner interactives.</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">Element failed standard validation.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        &lt;li id=&quot;containerCountry&quot; class=&quot;nav-item px-1&quot;&gt;      
+    &lt;div class=&quot;ecl-form-group&quot;&gt;
+      &lt;div c
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: N/A</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card serious shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-serious">serious</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">listitem</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">Ensure &lt;li&gt; elements are used semantically</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">&lt;li&gt; elements must be contained in a &lt;ul&gt; or &lt;ol&gt;</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">Fix any of the following:
+  List item parent element has a role that is not role=&quot;list&quot;</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        &lt;li id=&quot;containerCountry&quot; class=&quot;nav-item px-1&quot;&gt;
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: .nav-item.px-1:nth-child(1)</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card serious shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-serious">serious</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">toolbox-btn-no-label</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">Toolbox button  is missing an aria-label.</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">Add descriptive labels to icon-only buttons.</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">No aria-label detected.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        &lt;button class=&quot;ecl-button ecl-button--ghost&quot;&gt;Clear all&lt;/button&gt;
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: N/A</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card moderate shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-moderate">moderate</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">toolbox-btn-wrong-role</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">Toolbox item  should have role=&quot;menuitem&quot;.</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">Interactive menubar children should use role=&quot;menuitem&quot;.</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">Missing role=&quot;menuitem&quot;.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        &lt;button class=&quot;ecl-button ecl-button--ghost&quot;&gt;Clear all&lt;/button&gt;
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: N/A</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="7">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Sankey Nodes &amp; Modals</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="7b">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Highcharts Chart</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="8">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Translation Scan</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="9">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Global Tab Sweep</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="10">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">High Contrast Emulation</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="11">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Reduced Motion Emulation</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="12">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Text Spacing (1.4.12)</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="13">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Target Size (2.5.8)</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="13b">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Reflow (1.4.10)</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="13c">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Color Contrast</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="13d">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Status Messages</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">0 Unique Issues</span>
+                            <span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 hidden">
+                        
+                    </div>
+                </div>
+            
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="14">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">Global Page Structure</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">1 Unique Issues</span>
+                            
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 ">
+                        
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card moderate shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-moderate">moderate</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">content-outside-landmarks</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">Some interactive content exists outside of landmark regions.</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">Ensure all content is reachable via landmark navigation.</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">Element failed standard validation.</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: N/A</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        
+                    </div>
+                </div>
+            
+        </section>
+
+        <!-- Audit Activity Trail -->
+        <section class="mt-20">
+            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Audit Activity Trail</h4>
+            <div class="space-y-8 pl-4 border-l-2 border-slate-100">
+                <div class="relative pl-8">
+                    <span class="absolute left-[-11px] top-1 w-5 h-5 bg-white border-4 border-primary rounded-full"></span>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-sm font-bold text-slate-900">Audit session finalized</span>
+                        <span class="text-xs text-slate-400 font-medium">• 3/23/2026, 12:20:31 PM</span>
+                    </div>
+                    <p class="text-xs text-slate-500">All data consolidated into precision reports. Pipeline finished successfully.</p>
+                </div>
+                <div class="relative pl-8 opacity-50">
+                    <span class="absolute left-[-11px] top-1 w-5 h-5 bg-white border-4 border-slate-200 rounded-full"></span>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-sm font-bold text-slate-900">Module execution complete</span>
+                        <span class="text-xs text-slate-400 font-medium">• 12:18:31 PM</span>
+                    </div>
+                    <p class="text-xs text-slate-500">Tested 7 functional paths across the global domain.</p>
+                </div>
+                <div class="relative pl-8 opacity-30">
+                    <span class="absolute left-[-11px] top-1 w-5 h-5 bg-white border-4 border-slate-100 rounded-full"></span>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-sm font-bold text-slate-900">Audit session initialized</span>
+                        <span class="text-xs text-slate-400 font-medium">• 12:15:31 PM</span>
+                    </div>
+                    <p class="text-xs text-slate-500">Seed session started with global configuration. All nodes verified.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
 </body>
 </html>

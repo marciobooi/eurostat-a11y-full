@@ -14,7 +14,6 @@ module.exports = function generateModernReport(allViolations, totalStepsTested) 
       .replace(/'/g, '&#039;');
   }
 
-  // Step meta — maps the step string pushed by each tester to a display label
   const STEP_META = {
     'Tutorial Step':       { num: 1, label: 'Tutorial Scan' },
     'Navbar':              { num: 2, label: 'Navbar' },
@@ -34,6 +33,9 @@ module.exports = function generateModernReport(allViolations, totalStepsTested) 
     'High Contrast':       { num: 10, label: 'High Contrast Emulation' },
     'Reduced Motion':      { num: 11, label: 'Reduced Motion Emulation' },
     'Text Spacing':        { num: 12, label: 'Text Spacing (1.4.12)' },
+    'Reflow (1.4.10)':     { num: '13b', label: 'Reflow (1.4.10)' },
+    'Color Contrast':      { num: '13c', label: 'Color Contrast' },
+    'Status Messages':     { num: '13d', label: 'Status Messages' },
     'WCAG 2.2 Target Size':{ num: 13, label: 'Target Size (2.5.8)' },
     'Global Structure':    { num: 14, label: 'Global Page Structure' },
   };
@@ -46,10 +48,7 @@ module.exports = function generateModernReport(allViolations, totalStepsTested) 
     return { num: '?', label: stepStr };
   }
 
-  // Group by step first, then by rule ID within that step
   const byStep = {};
-  
-  // PRE-POPULATE: Ensure every known step is initialized so users see "Passed" steps
   Object.values(STEP_META).forEach(meta => {
     const stepKey = `${String(meta.num).padStart(3, '0')}_${meta.label}`;
     if (!byStep[stepKey]) byStep[stepKey] = { meta, rules: {} };
@@ -73,10 +72,7 @@ module.exports = function generateModernReport(allViolations, totalStepsTested) 
       };
     }
     (v.nodes || []).forEach(n => {
-      byStep[stepKey].rules[ruleId].nodes.push({
-        ...n,
-        stepOrigin: v.step
-      });
+      byStep[stepKey].rules[ruleId].nodes.push({ ...n, stepOrigin: v.step });
     });
   });
 
@@ -85,237 +81,255 @@ module.exports = function generateModernReport(allViolations, totalStepsTested) 
     .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
     .map(([, s]) => ({
       ...s,
-      ruleList: Object.values(s.rules).sort((a, b) =>
-        (impactWeight[b.impact] || 0) - (impactWeight[a.impact] || 0)
-      )
+      ruleList: Object.values(s.rules).sort((a, b) => (impactWeight[b.impact] || 0) - (impactWeight[a.impact] || 0))
     }));
+
+  const now = new Date();
+  const timestamp = now.toLocaleString();
 
   return `
 <!DOCTYPE html>
-<html lang="en">
+<html class="light" lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A11y Global Report</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --card-bg: #ffffff;
-      --border: #e2e8f0;
-      --critical: #ef4444;
-      --serious: #f97316;
-      --moderate: #eab308;
-      --minor: #3b82f6;
-      --font: 'Inter', system-ui, -apple-system, sans-serif;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-      font-family: var(--font);
-      background-color: var(--bg);
-      color: var(--text-main);
-      padding: 2rem;
-    }
-
-    .container { max-width: 1200px; margin: 0 auto; }
-
-    header { margin-bottom: 3rem; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
-    h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
-    .subtitle { color: var(--text-muted); font-size: 1rem; }
-
-    .summary-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
-    .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-    .stat-card.critical { border-top: 4px solid var(--critical); }
-    .stat-card.serious { border-top: 4px solid var(--serious); }
-    .stat-card.moderate { border-top: 4px solid var(--moderate); }
-    .stat-card.minor { border-top: 4px solid var(--minor); }
-    .stat-value { font-size: 2.5rem; font-weight: 800; }
-    .stat-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
-
-    .step-section { 
-      background: var(--card-bg); 
-      border-radius: 12px; 
-      border: 1px solid var(--border); 
-      margin-bottom: 2rem;
-      overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    .step-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1.2rem 1.5rem;
-      background: linear-gradient(135deg, #fdfdfd, #f8fafc);
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-    .step-header:hover { background: #f1f5f9; }
-
-    .step-num-badge {
-      background: #0f172a;
-      color: #f8fafc;
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 3px 10px;
-      border-radius: 999px;
-      flex-shrink: 0;
-    }
-
-    .step-title { font-size: 1.1rem; font-weight: 800; flex: 1; }
-    
-    .badge { padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
-    .badge.critical { background: #fee2e2; color: #991b1b; }
-    .badge.serious { background: #ffedd5; color: #c2410c; }
-    .badge.moderate { background: #fef9c3; color: #854d0e; }
-    .badge.minor { background: #dbeafe; color: #1e40af; }
-
-    .step-content { display: none; padding: 1.5rem; border-top: 1px solid var(--border); }
-    .step-content.expanded { display: block; }
-
-    .rule-card {
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      margin-bottom: 1.5rem;
-      overflow: hidden;
-    }
-
-    .rule-header {
-      padding: 1rem;
-      background: #fafafa;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .rule-title { font-weight: 700; font-size: 0.95rem; }
-
-    .rule-body { padding: 1rem; }
-    .rule-desc { font-size: 0.95rem; margin-bottom: 0.5rem; line-height: 1.5; color: #334155; }
-    .rule-help { font-size: 0.85rem; color: #64748b; }
-    .rule-help a { color: #3b82f6; text-decoration: none; font-weight: 600; }
-
-    .occ-grid { margin-top: 1rem; }
-    .node-item { background: #f8fafc; border: 1px solid var(--border); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
-    .node-reason { font-weight: 700; color: #b91c1c; font-size: 0.85rem; }
-    .node-target { font-family: 'JetBrains Mono', monospace; background: #e2e8f0; padding: 0.1rem 0.3rem; border-radius: 4px; font-size: 0.75rem; color: #475569; }
-
-    .code-block { background: #1e293b; color: #f8fafc; padding: 1rem; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; overflow-x: auto; margin: 1rem 0; }
-    .actions { display: flex; gap: 0.5rem; }
-    .btn { background: white; border: 1px solid var(--border); padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; }
-    .btn:hover { background: #f1f5f9; }
-    .btn.success { background: #10b981; color: white; border-color: #10b981; }
-
-    .chevron { transition: transform 0.2s; }
-    .expanded .chevron { transform: rotate(180deg); }
-  </style>
-  <script>
-    function toggleStep(el) {
-      const content = el.nextElementSibling;
-      el.classList.toggle('expanded');
-      content.classList.toggle('expanded');
-    }
-
-    function copyHiddenText(ev, btn) {
-      ev.stopPropagation();
-      const textarea = btn.nextElementSibling;
-      const text = textarea.value;
-      const el = document.createElement('textarea');
-      el.value = text;
-      document.body.appendChild(el);
-      el.select();
-      document.execCommand('copy');
-      document.body.removeChild(el);
-      
-      const originalText = btn.innerHTML;
-      btn.classList.add('success');
-      btn.innerHTML = '✓ Copied!';
-      setTimeout(() => {
-        btn.classList.remove('success');
-        btn.innerHTML = originalText;
-      }, 2000);
-    }
-  </script>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>A11y Audit Report - Audit Integrity</title>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@700;800&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+          tailwind.config = {
+            darkMode: "class",
+            theme: {
+              extend: {
+                colors: {
+                  primary: "#1d4ed8",
+                  surface: "#f8f9fb",
+                  "surface-container": "#edeef0",
+                  "on-primary": "#ffffff",
+                  critical: "#dc2626",
+                  serious: "#ea580c",
+                  moderate: "#ca8a04",
+                  minor: "#2563eb"
+                },
+                fontFamily: {
+                  headline: ["Manrope"],
+                  body: ["Inter"]
+                }
+              }
+            }
+          }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        body { background-color: #f8f9fb; font-family: 'Inter', sans-serif; }
+        .sidebar { background: #f8f9fb; border-right: 1px solid #e1e2e4; height: 100vh; position: sticky; top: 0; }
+        .nav-item { transition: all 0.2s; border-radius: 0.75rem; }
+        .nav-item:hover { background: #f3f4f6; }
+        .nav-item.active { background: #ffffff; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        .issue-card { border-left: 4px solid; }
+        .issue-card.critical { border-left-color: #dc2626; background: #fef2f2; }
+        .issue-card.serious { border-left-color: #ea580c; background: #fffaf0; }
+        .issue-card.moderate { border-left-color: #ca8a04; background: #fefce8; }
+        .issue-card.minor { border-left-color: #2563eb; background: #eff6ff; }
+        
+        .code-block { background: #0f172a; color: #f8fafc; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; border-radius: 0.75rem; padding: 1.25rem; }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <header>
-      <h1>A11y Audit Dashboard 🚀</h1>
-      <p class="subtitle">Detailed report grouped by test scenario. Total steps tested: ${totalStepsTested}</p>
-      
-      <div class="summary-stats">
-        <div class="stat-card critical"><span class="stat-value" style="color: var(--critical)">${critical}</span><div class="stat-label">Critical</div></div>
-        <div class="stat-card serious"><span class="stat-value" style="color: var(--serious)">${serious}</span><div class="stat-label">Serious</div></div>
-        <div class="stat-card moderate"><span class="stat-value" style="color: var(--moderate)">${moderate}</span><div class="stat-label">Moderate</div></div>
-        <div class="stat-card minor"><span class="stat-value" style="color: var(--minor)">${minor}</span><div class="stat-label">Minor</div></div>
-      </div>
-    </header>
+<body class="bg-surface text-slate-900 font-body">
 
-    <div class="steps-container">
-      ${sortedSteps.map(step => `
-        <div class="step-section">
-          <div class="step-header" onclick="toggleStep(this)">
-            <span class="step-num-badge">Step ${step.meta.num}</span>
-            <span class="step-title">${escapeHtml(step.meta.label)}</span>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <span class="badge ${step.ruleList.length > 0 ? 'serious' : ''}" style="background: ${step.ruleList.length > 0 ? '' : '#dcfce7'}; color: ${step.ruleList.length > 0 ? '' : '#166534'}">
-                ${step.ruleList.length} unique issues
-              </span>
-              <svg class="chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-          </div>
-          
-          <div class="step-content">
-            ${step.ruleList.map(rule => `
-              <div class="rule-card">
-                <div class="rule-header">
-                  <span class="rule-title">${escapeHtml(rule.id)}</span>
-                  <div style="display: flex; gap: 0.3rem;">
-                    ${rule.tags.filter(t => t.startsWith('wcag')).map(t => `<span class="badge" style="background: #e2e8f0; color: #475569; padding: 1px 6px;">${t.replace('wcag', 'SC ')}</span>`).join('')}
-                    <span class="badge ${rule.impact}">${rule.impact}</span>
-                  </div>
-                </div>
-                <div class="rule-body">
-                  <div class="rule-desc">${escapeHtml(rule.description)}</div>
-                  <div class="rule-help">👉 <a href="${escapeHtml(rule.helpUrl || '#')}" target="_blank">${escapeHtml(rule.help)}</a></div>
-                  
-                  <div class="occ-grid">
-                    ${rule.nodes.map(n => `
-                      <div class="node-item">
-                        <div style="margin-bottom: 0.5rem;">
-                          <span class="node-reason">Reason:</span> ${escapeHtml(n.failureSummary)}
-                        </div>
-                        ${n.stepOrigin && n.stepOrigin !== step.meta.label ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">Location: ${escapeHtml(n.stepOrigin)}</div>` : ''}
-                        <div style="margin-bottom: 0.8rem;">
-                          <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">Selector:</span>
-                          <span class="node-target">${escapeHtml(n.target ? n.target.join(', ') : 'unknown')}</span>
-                        </div>
-                        <div class="code-block">${escapeHtml(n.html)}</div>
-                        <div class="actions">
-                          <button class="btn" onclick="copyHiddenText(event, this)">HTML</button>
-                          <textarea style="display:none;">${escapeHtml(n.html)}</textarea>
-                          <button class="btn" onclick="copyHiddenText(event, this)">Summary</button>
-                          <textarea style="display:none;">${escapeHtml(n.failureSummary)}</textarea>
-                        </div>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              </div>
-            `).join('')}
-            ${step.ruleList.length === 0 ? '<div style="color: #166534; font-weight: 600; text-align: center; padding: 1rem;">No issues found in this scenario.</div>' : ''}
-          </div>
-        </div>
-      `).join('')}
+<!-- Top Navigation -->
+<nav class="bg-white border-b border-slate-200 h-16 flex items-center px-8 sticky top-0 z-50 shadow-sm">
+    <div class="flex items-center gap-2 mr-12">
+        <span class="material-symbols-outlined text-primary font-bold">verified_user</span>
+        <h1 class="text-xl font-headline font-extrabold tracking-tight">Audit Integrity</h1>
     </div>
-  </div>
+    <div class="flex items-center gap-8 text-sm font-semibold text-slate-500">
+        <a href="#" class="hover:text-primary">Dashboard</a>
+        <a href="#" class="text-primary border-b-2 border-primary py-5">Audits</a>
+        <a href="#" class="hover:text-primary text-slate-400">Reports</a>
+        <a href="#" class="hover:text-primary text-slate-400">Settings</a>
+    </div>
+    <div class="ml-auto flex items-center gap-4">
+        <div class="relative">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            <input type="text" placeholder="Search audits..." class="bg-slate-100 border-none rounded-full py-2 pl-10 pr-4 text-xs w-64"/>
+        </div>
+        <span class="material-symbols-outlined text-slate-400">notifications</span>
+        <span class="material-symbols-outlined text-slate-400">history</span>
+    </div>
+</nav>
+
+<div class="flex">
+    <!-- Left Sidebar -->
+    <aside class="w-80 sidebar p-6 flex flex-col pt-12">
+        <div class="mb-10 pl-4">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="p-2 bg-primary rounded-lg text-white">
+                    <span class="material-symbols-outlined text-lg">description</span>
+                </div>
+                <div>
+                  <h3 class="font-headline font-extrabold text-sm leading-none">Report View</h3>
+                  <p class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Accessibility Compliance</p>
+                </div>
+            </div>
+        </div>
+
+        <nav class="space-y-1 mb-12">
+            <a href="#" class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-900 active">
+                <span class="material-symbols-outlined text-sm">analytics</span> Summary
+            </a>
+            <a href="#" class="nav-item flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-500">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-sm text-critical">cancel</span> Critical Issues
+                </div>
+                <span class="bg-red-50 text-critical px-2 rounded-full text-[10px]">${critical}</span>
+            </a>
+            <a href="#" class="nav-item flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-500">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-sm text-serious">warning</span> Serious Issues
+                </div>
+                <span class="bg-orange-50 text-serious px-2 rounded-full text-[10px]">${serious}</span>
+            </a>
+            <a href="#" class="nav-item flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-500">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-sm text-moderate">info</span> Moderate Issues
+                </div>
+                <span class="bg-yellow-50 text-moderate px-2 rounded-full text-[10px]">${moderate}</span>
+            </a>
+        </nav>
+
+        <div class="mt-auto space-y-2 border-t border-slate-200 pt-6">
+            <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Export PDF
+            </button>
+            <button class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+                <span class="material-symbols-outlined text-sm">settings</span> Audit Settings
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-12 max-w-[1400px]">
+        <header class="mb-12">
+            <h2 class="text-4xl font-headline font-extrabold text-slate-900 tracking-tight mb-2">Audit Report: Accessibility Scan</h2>
+            <div class="flex items-center gap-3 text-sm font-medium">
+                <span class="material-symbols-outlined text-primary text-lg">check_circle</span>
+                <p class="text-slate-600">Comprehensive WCAG 2.1 Level AA Compliance Review — <span class="text-slate-400">Last scanned at ${timestamp}</span></p>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-4 gap-6 mb-16">
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border-b-4 border-slate-200 flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Critical</span>
+                <span class="text-5xl font-headline font-extrabold ${critical > 0 ? 'text-critical' : 'text-slate-900'}">${critical}</span>
+            </div>
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border-b-4 border-serious flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Serious</span>
+                <span class="text-5xl font-headline font-extrabold ${serious > 0 ? 'text-serious' : 'text-slate-900'}">${serious}</span>
+            </div>
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border-b-4 border-moderate flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Moderate</span>
+                <span class="text-5xl font-headline font-extrabold ${moderate > 0 ? 'text-moderate' : 'text-slate-900'}">${moderate}</span>
+            </div>
+            <div class="bg-white p-8 rounded-[2rem] shadow-sm border-b-4 border-minor flex flex-col items-center">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Minor</span>
+                <span class="text-5xl font-headline font-extrabold ${minor > 0 ? 'text-minor' : 'text-slate-900'}">${minor}</span>
+            </div>
+        </div>
+
+        <section class="space-y-4">
+            ${sortedSteps.map(step => `
+                <div class="bg-white rounded-[1.5rem] border border-slate-100 shadow-sm overflow-hidden module-step" data-num="${step.meta.num}">
+                    <button class="w-full px-8 py-6 flex items-center justify-between hover:bg-slate-50 transition-colors group" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')">
+                        <div class="flex items-center gap-4">
+                            <span class="material-symbols-outlined text-slate-300 chevron transition-transform" style="font-size: 20px;">expand_more</span>
+                            <span class="text-lg font-headline font-bold text-slate-900">${escapeHtml(step.meta.label)}</span>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">${step.ruleList.length} Unique Issues</span>
+                            ${step.ruleList.length === 0 ? '<span class="material-symbols-outlined text-emerald-500 bg-emerald-50 rounded-full p-1 text-sm">check</span>' : ''}
+                        </div>
+                    </button>
+                    
+                    <div class="px-8 pb-12 pt-4 border-t border-slate-50 ${step.ruleList.length > 0 ? '' : 'hidden'}">
+                        ${step.ruleList.map(rule => `
+                            <div class="p-8 rounded-[2rem] mb-6 issue-card ${rule.impact || 'minor'} shadow-sm relative overflow-hidden">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <span class="bg-white px-3 py-1 rounded-full text-[10px] font-black uppercase text-${rule.impact}">${rule.impact}</span>
+                                        <h4 class="text-xl font-headline font-extrabold text-slate-900">${escapeHtml(rule.id)}</h4>
+                                    </div>
+                                    <span class="bg-white/50 text-slate-400 text-[10px] px-3 py-1 rounded font-bold uppercase">Issue Found</span>
+                                </div>
+                                
+                                <p class="text-slate-600 text-sm leading-relaxed mb-8 max-w-2xl">${escapeHtml(rule.description)}</p>
+                                
+                                <div class="grid grid-cols-2 gap-12 mb-10">
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Recommendation</h5>
+                                        <p class="text-xs font-bold text-slate-900 leading-relaxed">${escapeHtml(rule.help)}</p>
+                                    </div>
+                                    <div>
+                                        <h5 class="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-3">Reason</h5>
+                                        <p class="text-xs italic text-slate-600">${escapeHtml(rule.nodes[0]?.failureSummary || 'Element failed standard validation.')}</p>
+                                    </div>
+                                </div>
+
+                                <div class="bg-slate-900 rounded-2xl overflow-hidden shadow-2xl">
+                                    <div class="flex bg-slate-800 px-6 pt-3">
+                                        <button class="px-4 py-2 text-[10px] font-bold text-white border-b-2 border-primary">HTML</button>
+                                        <button class="px-4 py-2 text-[10px] font-bold text-slate-400 hover:text-white transition-colors">Summary</button>
+                                    </div>
+                                    <div class="code-block h-48 overflow-y-auto overflow-x-auto text-[11px] leading-relaxed">
+                                        ${escapeHtml(rule.nodes[0]?.html)}
+                                    </div>
+                                    <div class="p-3 bg-slate-800/50 flex justify-between items-center px-6">
+                                       <span class="text-[9px] text-slate-500 font-mono">Selector: ${escapeHtml(rule.nodes[0]?.target?.join(' ')) || 'N/A'}</span>
+                                       <button class="text-[9px] text-white bg-primary px-3 py-1 rounded-full font-bold">COPY CODE</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        </section>
+
+        <!-- Audit Activity Trail -->
+        <section class="mt-20">
+            <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Audit Activity Trail</h4>
+            <div class="space-y-8 pl-4 border-l-2 border-slate-100">
+                <div class="relative pl-8">
+                    <span class="absolute left-[-11px] top-1 w-5 h-5 bg-white border-4 border-primary rounded-full"></span>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-sm font-bold text-slate-900">Audit session finalized</span>
+                        <span class="text-xs text-slate-400 font-medium">• ${timestamp}</span>
+                    </div>
+                    <p class="text-xs text-slate-500">All data consolidated into precision reports. Pipeline finished successfully.</p>
+                </div>
+                <div class="relative pl-8 opacity-50">
+                    <span class="absolute left-[-11px] top-1 w-5 h-5 bg-white border-4 border-slate-200 rounded-full"></span>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-sm font-bold text-slate-900">Module execution complete</span>
+                        <span class="text-xs text-slate-400 font-medium">• ${new Date(now - 120000).toLocaleTimeString()}</span>
+                    </div>
+                    <p class="text-xs text-slate-500">Tested ${totalStepsTested} functional paths across the global domain.</p>
+                </div>
+                <div class="relative pl-8 opacity-30">
+                    <span class="absolute left-[-11px] top-1 w-5 h-5 bg-white border-4 border-slate-100 rounded-full"></span>
+                    <div class="flex items-center gap-3 mb-1">
+                        <span class="text-sm font-bold text-slate-900">Audit session initialized</span>
+                        <span class="text-xs text-slate-400 font-medium">• ${new Date(now - 300000).toLocaleTimeString()}</span>
+                    </div>
+                    <p class="text-xs text-slate-500">Seed session started with global configuration. All nodes verified.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
 </body>
 </html>
 `;

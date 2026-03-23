@@ -62,7 +62,26 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // 2. API to Start Audit
+  // 2. API to List Reports
+  if (url === '/api/reports') {
+    const reportDir = path.join(__dirname, 'a11y-reports');
+    if (!fs.existsSync(reportDir)) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify([]));
+    }
+    fs.readdir(reportDir, (err, files) => {
+      if (err) return res.writeHead(500).end('Error listing reports');
+      const reports = files.filter(f => f.endsWith('.html')).map(f => {
+        const stats = fs.statSync(path.join(reportDir, f));
+        return { name: f, date: stats.mtime, size: (stats.size / 1024).toFixed(1) + ' KB' };
+      }).sort((a, b) => b.date - a.date);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(reports));
+    });
+    return;
+  }
+
+  // 3. API to Start Audit
   if (url.startsWith('/api/start-audit')) {
     if (isAuditRunning) {
       res.writeHead(409, { 'Content-Type': 'application/json' });

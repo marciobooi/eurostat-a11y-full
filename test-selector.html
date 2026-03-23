@@ -84,7 +84,7 @@
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
   </style>
 </head>
-<body class="bg-surface font-body text-on-surface min-h-screen">
+<body class="bg-surface font-body text-on-surface h-screen overflow-hidden">
 
 <!-- SideNavBar (Rail) -->
 <aside class="fixed left-0 top-0 h-full z-40 flex flex-col bg-slate-50 border-r border-outline-variant w-64 font-label text-sm font-medium">
@@ -93,19 +93,15 @@
     <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-widest font-bold">Precision Suite</p>
   </div>
   <nav class="flex-1 px-4 space-y-2">
-    <a class="flex items-center gap-3 px-4 py-3 text-primary font-bold bg-white border-r-2 border-primary transition-colors" href="#">
+    <a id="nav-audit" class="flex items-center gap-3 px-4 py-3 text-primary font-bold bg-white border-r-2 border-primary transition-colors" href="#" onclick="showSection('audit')">
       <span class="material-symbols-outlined">dashboard</span>
       <span>Audit Center</span>
     </a>
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-xl" href="#">
-      <span class="material-symbols-outlined">receipt_long</span>
+    <a id="nav-history" class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-xl" href="#" onclick="showSection('history')">
+      <span class="material-symbols-outlined">history</span>
       <span>Report History</span>
     </a>
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-xl" href="#">
-      <span class="material-symbols-outlined">extension</span>
-      <span>Custom Modules</span>
-    </a>
-    <a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-xl" href="#">
+    <a id="nav-settings" class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-xl" href="#" onclick="showSection('settings')">
       <span class="material-symbols-outlined">settings</span>
       <span>Settings</span>
     </a>
@@ -125,7 +121,7 @@
 </aside>
 
 <!-- Main Content Canvas -->
-<main class="ml-64 p-12">
+<main class="ml-64 p-12 h-screen flex flex-col overflow-hidden">
   <!-- Top Header Info -->
   <header class="mb-12 flex justify-between items-end">
     <div>
@@ -150,49 +146,77 @@
     </div>
   </header>
 
-  <div class="editorial-grid">
-    <!-- Left Grid: Modules -->
-    <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="testGrid">
-      <!-- Dynamic Content -->
-    </section>
-
-    <!-- Right Column: Sidebar Stats -->
-    <aside class="space-y-6">
-      <!-- Engine Status Panel -->
-      <div class="bg-white p-8 rounded-3xl border border-outline-variant shadow-sm">
-        <div class="flex items-center gap-2 mb-6">
-          <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
-          <h4 class="font-headline font-bold text-[10px] tracking-widest uppercase text-outline">ENGINE STATUS</h4>
-        </div>
-        <div class="mb-8">
-          <div class="text-4xl font-headline font-extrabold mb-1 tracking-tighter" id="engineStatus">IDLE</div>
-          <p class="text-xs text-on-surface-variant leading-relaxed font-medium">System awaiting audit parameters. Connection integrity verified.</p>
-        </div>
-        <div class="space-y-4 pt-6 border-t border-surface-container-high" id="progressArea" style="display:none;">
-          <h5 class="text-[10px] font-bold text-outline uppercase tracking-wider">CURRENT PIPELINE</h5>
-          <div class="p-4 bg-primary-container text-white rounded-2xl shadow-inner">
-            <div class="flex items-center gap-3">
-               <span class="material-symbols-outlined animate-spin text-sm">cycle</span>
-               <span id="currentStep" class="text-xs font-bold tracking-tight">ANALYZING DOM...</span>
+  <!-- Audit Center (Modules) Section -->
+  <div id="section-audit" class="view-section flex-1 overflow-hidden">
+    <div class="editorial-grid h-full">
+      <!-- Left Grid: Modules -->
+      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-4" id="testGrid"></section>
+      <!-- Right Column: Sidebar Stats -->
+      <aside class="space-y-6 flex flex-col h-full overflow-hidden">
+        <div class="bg-white p-8 rounded-3xl border border-outline-variant shadow-sm">
+          <div class="flex items-center gap-2 mb-6">
+            <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+            <h4 class="font-headline font-bold text-[10px] tracking-widest uppercase text-outline">ENGINE STATUS</h4>
+          </div>
+          <div class="mb-8">
+            <div class="text-4xl font-headline font-extrabold mb-1 tracking-tighter" id="engineStatus">IDLE</div>
+            <p class="text-xs text-on-surface-variant leading-relaxed font-medium">System awaiting audit parameters.</p>
+          </div>
+          <div class="space-y-4 pt-6 border-t border-surface-container-high" id="progressArea" style="display:none;">
+            <h5 class="text-[10px] font-bold text-outline uppercase tracking-wider">CURRENT PIPELINE</h5>
+            <div class="p-4 bg-primary-container text-white rounded-2xl shadow-inner">
+              <div class="flex items-center gap-3">
+                 <span class="material-symbols-outlined animate-spin text-sm">cycle</span>
+                 <span id="currentStep" class="text-xs font-bold tracking-tight">ANALYZING...</span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- System Console Panel -->
-      <div class="bg-slate-900 text-slate-300 p-6 rounded-3xl font-mono text-[10px] leading-relaxed shadow-2xl border border-slate-800">
-        <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-          <span class="text-slate-500 font-bold uppercase tracking-widest text-[9px]">system_conductor.log</span>
-          <div class="flex gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
-            <span class="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
+        <div class="bg-slate-900 text-slate-300 p-6 rounded-3xl font-mono text-[10px] leading-relaxed shadow-2xl border border-slate-800 flex-1 overflow-hidden flex flex-col">
+          <div class="flex items-center justify-between mb-2">
+             <span class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">SYSTEM_ENGINE.LOG</span>
+             <span class="w-2 h-2 rounded-full bg-slate-700"></span>
           </div>
+          <div class="space-y-1 overflow-y-auto flex-1 pr-2" id="console"></div>
         </div>
-        <div class="space-y-1 h-[300px] overflow-y-auto pr-2" id="console">
-          <div class="text-white/40 italic">Ready for instruction. Select modules and click 'Execute'.</div>
-        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Report History Section -->
+  <div id="section-history" class="view-section hidden">
+    <div class="bg-white rounded-3xl border border-outline-variant p-8 shadow-sm min-h-[500px]">
+      <div class="flex justify-between items-center mb-10">
+        <h3 class="text-2xl font-headline font-extrabold text-on-surface">Archive Ledger</h3>
+        <button class="text-xs font-bold text-primary flex items-center gap-2" onclick="loadReports()">
+          <span class="material-symbols-outlined text-sm">refresh</span> Refresh List
+        </button>
       </div>
-    </aside>
+      <div id="historyList" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- Settings Section -->
+  <div id="section-settings" class="view-section hidden">
+    <div class="bg-white rounded-3xl border border-outline-variant p-10 shadow-sm">
+      <h3 class="text-2xl font-headline font-extrabold text-on-surface mb-8">Conductor Settings</h3>
+      <div class="space-y-8">
+         <div class="flex items-center justify-between p-6 bg-surface-container rounded-2xl border border-outline-variant">
+            <div>
+               <p class="font-bold text-slate-900">Headless Mode</p>
+               <p class="text-xs text-slate-500">Run the audit without opening a browser window.</p>
+            </div>
+            <input type="checkbox" id="headless" checked class="w-6 h-6 rounded-md text-primary border-outline-variant">
+         </div>
+         <div class="flex items-center justify-between p-6 bg-surface-container rounded-2xl border border-outline-variant">
+            <div>
+               <p class="font-bold text-slate-900">High Precision Screenshots</p>
+               <p class="text-xs text-slate-500">Capture full-page 4K resolution visuals for the report.</p>
+            </div>
+            <input type="checkbox" checked class="w-6 h-6 rounded-md text-primary border-outline-variant">
+         </div>
+      </div>
+    </div>
   </div>
 
   <!-- Removed Floating Actions -->
@@ -360,6 +384,51 @@
     } catch (err) {
       appendLog(`❌ ERROR: ${err.message}`);
       runBtn.disabled = false;
+    }
+  }
+
+  function showSection(id) {
+    document.querySelectorAll('.view-section').forEach(s => s.classList.add('hidden'));
+    document.getElementById('section-' + id).classList.remove('hidden');
+    
+    // Update nav styles
+    document.querySelectorAll('nav a').forEach(a => {
+      a.className = "flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors rounded-xl";
+    });
+    const activeNav = document.getElementById('nav-' + id);
+    if (activeNav) {
+      activeNav.className = "flex items-center gap-3 px-4 py-3 text-primary font-bold bg-white border-r-2 border-primary transition-colors";
+    }
+
+    if (id === 'history') loadReports();
+  }
+
+  async function loadReports() {
+    const listEl = document.getElementById('historyList');
+    listEl.innerHTML = '<p class="text-center py-10 text-outline animate-pulse">Scanning Archive...</p>';
+    try {
+      const res = await fetch('/api/reports');
+      const reports = await res.json();
+      listEl.innerHTML = '';
+      if (reports.length === 0) listEl.innerHTML = '<p class="text-center py-10 text-outline">No reports found yet.</p>';
+      reports.forEach(r => {
+        const item = document.createElement('div');
+        item.className = "flex items-center justify-between p-5 bg-surface-container rounded-2xl border border-outline-variant hover:border-primary/30 transition-all cursor-pointer group";
+        item.onclick = () => window.open('/reports/' + r.name, '_blank');
+        item.innerHTML = `
+          <div class="flex items-center gap-4">
+             <span class="material-symbols-outlined text-slate-400 group-hover:text-primary">description</span>
+             <div>
+                <p class="font-bold text-slate-800">${r.name}</p>
+                <p class="text-[10px] text-outline uppercase font-bold">${new Date(r.date).toLocaleString()} • ${r.size}</p>
+             </div>
+          </div>
+          <span class="material-symbols-outlined text-outline group-hover:text-primary">arrow_forward</span>
+        `;
+        listEl.appendChild(item);
+      });
+    } catch (err) {
+      listEl.innerHTML = '<p class="text-error">Error loading history.</p>';
     }
   }
 
